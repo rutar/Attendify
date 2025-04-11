@@ -1,0 +1,14 @@
+# .gitignore
+# Java/Gradle
+build/
+*.jar
+.gradle/
+gradlew
+gradlew.bat
+
+# Angular
+node_modules/
+dist/
+
+# Docker
+*.log
