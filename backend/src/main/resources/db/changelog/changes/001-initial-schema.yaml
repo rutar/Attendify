@@ -1,0 +1,101 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-events-table
+      author: RT
+      changes:
+        - createTable:
+            tableName: events
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date_time
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: location
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: additional_info
+                  type: varchar(1000)
+  - changeSet:
+      id: 002-create-participants-table
+      author: RT
+      changes:
+        - createTable:
+            tableName: participants
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(50)
+              - column:
+                  name: last_name
+                  type: varchar(50)
+              - column:
+                  name: personal_code
+                  type: varchar(11)
+              - column:
+                  name: company_name
+                  type: varchar(100)
+              - column:
+                  name: registration_code
+                  type: varchar(8)
+              - column:
+                  name: participant_count
+                  type: int
+              - column:
+                  name: payment_method
+                  type: varchar(20)
+              - column:
+                  name: additional_info
+                  type: varchar(1500)
+  - changeSet:
+      id: 003-create-event-participant-table
+      author: RT
+      changes:
+        - createTable:
+            tableName: event_participant
+            columns:
+              - column:
+                  name: event_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_event_id
+                    references: events(id)
+              - column:
+                  name: participant_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_participant_id
+                    references: participants(id)
+        - addPrimaryKey:
+            tableName: event_participant
+            columnNames: event_id, participant_id
+            constraintName: pk_event_participant
