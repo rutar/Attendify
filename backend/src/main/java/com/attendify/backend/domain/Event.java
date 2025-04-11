@@ -1,6 +1,7 @@
 package com.attendify.backend.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -28,6 +29,7 @@ public class Event {
     private String name;
 
     @NotNull(message = "Date and time must be specified")
+    @Future(message = "Event date must be in the future")
     @Column(name = "date_time", nullable = false)
     private OffsetDateTime dateTime;
 
@@ -40,11 +42,32 @@ public class Event {
     @Column(name = "additional_info", length = 1000)
     private String additionalInfo;
 
-    @ManyToMany
-    @JoinTable(
-            name = "event_participant",
-            joinColumns = @JoinColumn(name = "event_id"),
-            inverseJoinColumns = @JoinColumn(name = "participant_id")
-    )
+    @ManyToMany(mappedBy = "events", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Participant> participants = new ArrayList<>();
+
+    public void addParticipant(Participant participant) {
+        participants.add(participant);
+        if (!participant.getEvents().contains(this)) {
+            participant.getEvents().add(this);
+        }
+    }
+
+    public void removeParticipant(Participant participant) {
+        participants.remove(participant);
+        if (participant.getEvents().contains(this)) {
+            participant.getEvents().remove(this);
+        }
+    }
+
+    public boolean isFutureEvent() {
+        return dateTime.isAfter(OffsetDateTime.now());
+    }
+
+    public int getParticipantCount() {
+        return participants.size();
+    }
+
+    public boolean hasParticipant(Participant participant) {
+        return participants.contains(participant);
+    }
 }
