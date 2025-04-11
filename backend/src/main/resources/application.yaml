@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/attendify
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+server:
+  port: 8080
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  info:
+    title: Attendify API
+    description: API for managing events and participants
+    version: 1.0.0
