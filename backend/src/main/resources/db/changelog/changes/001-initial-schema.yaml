@@ -1,15 +1,18 @@
 databaseChangeLog:
   - changeSet:
       id: 001-create-events-table
-      author: RT
+      author: SA
       changes:
+        - createSequence:
+            sequenceName: events_id_seq
+            startValue: 1
+            incrementBy: 1
         - createTable:
             tableName: events
             columns:
               - column:
                   name: id
                   type: bigint
-                  autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -20,63 +23,157 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: date_time
-                  type: timestamp with time zone
+                  type: timestamptz
                   constraints:
                     nullable: false
               - column:
                   name: location
                   type: varchar(200)
+              - column:
+                  name: status
+                  type: varchar(20)
+                  defaultValue: "ACTIVE"
                   constraints:
                     nullable: false
               - column:
                   name: additional_info
-                  type: varchar(1000)
+                  type: varchar(1500)
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+
   - changeSet:
       id: 002-create-participants-table
-      author: RT
+      author: SA
       changes:
+        - createSequence:
+            sequenceName: participants_id_seq
+            startValue: 1
+            incrementBy: 1
         - createTable:
             tableName: participants
             columns:
               - column:
                   name: id
                   type: bigint
-                  autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: type
-                  type: varchar(20)
+                  name: participant_type
+                  type: varchar(31)
                   constraints:
                     nullable: false
-              - column:
-                  name: first_name
-                  type: varchar(50)
-              - column:
-                  name: last_name
-                  type: varchar(50)
-              - column:
-                  name: personal_code
-                  type: varchar(11)
-              - column:
-                  name: company_name
-                  type: varchar(100)
-              - column:
-                  name: registration_code
-                  type: varchar(8)
-              - column:
-                  name: participant_count
-                  type: int
               - column:
                   name: payment_method
                   type: varchar(20)
               - column:
                   name: additional_info
                   type: varchar(1500)
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+
   - changeSet:
-      id: 003-create-event-participant-table
-      author: RT
+      id: 003-create-persons-table
+      author: SA
+      changes:
+        - createTable:
+            tableName: persons
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    foreignKeyName: fk_person_participant
+                    references: participants(id)
+                    deleteCascade: true
+              - column:
+                  name: first_name
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: personal_code
+                  type: varchar(11)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: email
+                  type: varchar(100)
+              - column:
+                  name: phone
+                  type: varchar(20)
+
+  - changeSet:
+      id: 004-create-companies-table
+      author: SA
+      changes:
+        - createTable:
+            tableName: companies
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    foreignKeyName: fk_company_participant
+                    references: participants(id)
+                    deleteCascade: true
+              - column:
+                  name: company_name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: registration_code
+                  type: varchar(8)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: participant_count
+                  type: int
+              - column:
+                  name: contact_person
+                  type: varchar(100)
+              - column:
+                  name: email
+                  type: varchar(100)
+              - column:
+                  name: phone
+                  type: varchar(20)
+
+  - changeSet:
+      id: 005-create-event-participant-table
+      author: SA
       changes:
         - createTable:
             tableName: event_participant
@@ -86,16 +183,59 @@ databaseChangeLog:
                   type: bigint
                   constraints:
                     nullable: false
-                    foreignKeyName: fk_event_id
-                    references: events(id)
               - column:
                   name: participant_id
                   type: bigint
                   constraints:
                     nullable: false
-                    foreignKeyName: fk_participant_id
-                    references: participants(id)
+              - column:
+                  name: attendance_status
+                  type: varchar(20)
+                  defaultValue: "REGISTERED"
+              - column:
+                  name: registered_at
+                  type: timestamptz
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
         - addPrimaryKey:
             tableName: event_participant
             columnNames: event_id, participant_id
             constraintName: pk_event_participant
+        - addForeignKeyConstraint:
+            baseTableName: event_participant
+            baseColumnNames: event_id
+            referencedTableName: events
+            referencedColumnNames: id
+            constraintName: fk_event_participant_event
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: event_participant
+            baseColumnNames: participant_id
+            referencedTableName: participants
+            referencedColumnNames: id
+            constraintName: fk_event_participant_participant
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 006-create-indexes
+      author: SA
+      changes:
+        - createIndex:
+            indexName: idx_events_date_time
+            tableName: events
+            columns:
+              - column:
+                  name: date_time
+        - createIndex:
+            indexName: idx_persons_personal_code
+            tableName: persons
+            columns:
+              - column:
+                  name: personal_code
+        - createIndex:
+            indexName: idx_companies_registration_code
+            tableName: companies
+            columns:
+              - column:
+                  name: registration_code
