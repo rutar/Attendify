@@ -10,11 +10,12 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/attendify
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
+    restart: on-failure
 
   frontend:
     build:
@@ -26,6 +27,7 @@ services:
       - backend
     networks:
       - app-network
+    restart: on-failure
 
   db:
     image: postgres:15-alpine
@@ -37,8 +39,15 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     networks:
       - app-network
+    restart: unless-stopped
 
 networks:
   app-network:
