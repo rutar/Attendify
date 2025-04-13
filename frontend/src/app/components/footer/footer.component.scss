@@ -1,0 +1,20 @@
+.footer {
+  display: flex;
+  justify-content: space-around;
+  background-color: #2b2b2b;
+  color: white;
+  padding: 32px;
+
+  div {
+    width: 30%;
+
+    h4 {
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 4px 0;
+    }
+  }
+}

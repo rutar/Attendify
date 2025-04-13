@@ -1,15 +1,11 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-footer',
-  imports: [],
-  template: `
-    <p>
-      footer works!
-    </p>
-  `,
-  styles: ``
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './footer.component.html',
+  styleUrls: ['./footer.component.scss'],
 })
-export class FooterComponent {
-
-}
+export class FooterComponent {}
