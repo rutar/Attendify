@@ -2,8 +2,8 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   datasource:
-#   url: jdbc:postgresql://localhost:5432/attendify
-    url: jdbc:postgresql://db:5432/attendify
+    url: jdbc:postgresql://localhost:5432/attendify
+#   url: jdbc:postgresql://db:5432/attendify
     username: postgres
     password: password
     hikari:
