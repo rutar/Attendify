@@ -1,0 +1,38 @@
+{
+  "events": [
+    {
+      "id": "2",
+      "title": "Integer nec nulla",
+      "date": "04.04.2024",
+      "isPast": true,
+      "location": "Tartu"
+    }
+  ],
+  "participants": [
+    {
+      "id": "1",
+      "type": "person",
+      "firstName": "Uku",
+      "lastName": "Leele",
+      "idCode": "37810014944",
+      "paymentMethod": "sularaha",
+      "eventId": 1
+    },
+    {
+      "id": "2",
+      "type": "company",
+      "companyName": "Nullam OÜ",
+      "regCode": "70000622",
+      "paymentMethod": "kaart",
+      "eventId": 1
+    },
+    {
+      "id": 0,
+      "type": "company",
+      "paymentMethod": "sularaha",
+      "extraInfo": "wegwergerg",
+      "companyName": "rtrt",
+      "regCode": "234234234"
+    }
+  ]
+}
