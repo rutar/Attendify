@@ -1,0 +1,13 @@
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="text-center">{{ event().title }}</h2>
+    </div>
+    <div class="card-body">
+      <p class="card-text">{{ event().description || 'Kirjeldus puudub' }}</p>
+      <p><strong>Kuupäev:</strong> {{ event().date }}</p>
+      <p><strong>Asukoht:</strong> {{ event().location || 'Määramata' }}</p>
+      <a routerLink="/events/{{ event().id }}/participants" class="btn btn-primary">Vaata osavõtjaid</a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+<section class="events">
+  <div class="column">
+    <h3>Tulevased üritused</h3>
+    <ul>
+      <li *ngFor="let event of upcoming()">
+        <span>{{ event.title }}</span>
+        <span>{{ event.date }}</span>
+        <span>OSAVÕTJAD</span>
+        <button (click)="removeEvent(event)">×</button>
+      </li>
+    </ul>
+    <a routerLink="/events/uus">LISA ÜRITUS</a>
+  </div>
+
+  <div class="column">
+    <h3>Toimunud üritused</h3>
+    <ul>
+      <li *ngFor="let event of past()">
+        <span>{{ event.title }}</span>
+        <span>{{ event.date }}</span>
+        <span>OSAVÕTJAD</span>
+      </li>
+    </ul>
+  </div>
+</section>
