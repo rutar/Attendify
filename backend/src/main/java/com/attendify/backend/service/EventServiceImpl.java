@@ -4,7 +4,6 @@ import com.attendify.backend.domain.Event;
 import com.attendify.backend.domain.EventParticipant;
 import com.attendify.backend.domain.Participant;
 import com.attendify.backend.exception.ResourceNotFoundException;
-import com.attendify.backend.repository.EventParticipantRepository;
 import com.attendify.backend.repository.EventRepository;
 import com.attendify.backend.repository.ParticipantRepository;
 import jakarta.transaction.Transactional;
@@ -19,7 +18,6 @@ import java.util.List;
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final ParticipantRepository participantRepository;
-    private final EventParticipantRepository eventParticipantRepository;
 
     @Override
     public List<Event> getFutureEvents() {
