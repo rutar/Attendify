@@ -4,17 +4,17 @@
       <h2>Osavõtjad</h2>
     </div>
     <div class="card-body">
-      <!-- Event Info -->
+      <!-- Ürituse info -->
       <section *ngIf="event()" class="event-info mb-4">
-        <p><strong>Ürituse nimi:</strong> {{ event()!.title }}</p>
-        <p><strong>Toimumisaeg:</strong> {{ event()!.date }}</p>
+        <p><strong>Ürituse nimi:</strong> {{ event()!.name }}</p>
+        <p><strong>Toimumisaeg:</strong> {{ event()!.dateTime | date:'medium' }}</p>
         <p><strong>Koht:</strong> {{ event()!.location || 'Määramata' }}</p>
       </section>
 
-      <!-- Error Message -->
+      <!-- Vea teade -->
       <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
 
-      <!-- Participants List -->
+      <!-- Osavõtjate nimekiri -->
       <section class="participants-list mb-4">
         <h3>Osavõtjad</h3>
         <table class="table table-striped">
@@ -31,11 +31,13 @@
           <tr *ngFor="let p of participants(); let i = index; trackBy: trackById">
             <td>{{ i + 1 }}</td>
             <td>
-              <ng-container *ngIf="p.type === 'person'">{{ p.firstName }} {{ p.lastName }}</ng-container>
-              <ng-container *ngIf="p.type === 'company'">{{ p.companyName }}</ng-container>
+              <ng-container *ngIf="p.type === 'PERSON'">{{ p.firstName }} {{ p.lastName }}</ng-container>
+              <ng-container *ngIf="p.type === 'COMPANY'">{{ p.companyName }}</ng-container>
             </td>
-            <td>{{ p.type === 'person' ? p.idCode : p.regCode }}</td>
-            <td>{{ p.paymentMethod }}</td>
+            <td>{{ p.type === 'PERSON' ? p.personalCode : p.registrationCode }}</td>
+            <td>
+              {{ p.paymentMethod === 'CASH' ? 'Sularaha' : p.paymentMethod === 'CARD' ? 'Kaart' : 'Ülekanne' }}
+            </td>
             <td>
               <a routerLink="/participants/{{ p.id }}" class="btn btn-sm btn-outline-primary">Vaata/Muuda</a>
               <button (click)="deleteParticipant(p)" class="btn btn-sm btn-outline-danger">Kustuta</button>
@@ -48,7 +50,7 @@
         </table>
       </section>
 
-      <!-- Add Participant Form -->
+      <!-- Osavõtja lisamise vorm -->
       <h3>Osavõtjate lisamine</h3>
       <form [formGroup]="participantForm" (ngSubmit)="addParticipant()">
         <div class="mb-3">
@@ -58,7 +60,7 @@
               class="form-check-input"
               type="radio"
               formControlName="type"
-              value="person"
+              value="PERSON"
               id="personType"
             />
             <label class="form-check-label" for="personType">Eraisik</label>
@@ -68,15 +70,15 @@
               class="form-check-input"
               type="radio"
               formControlName="type"
-              value="company"
+              value="COMPANY"
               id="companyType"
             />
             <label class="form-check-label" for="companyType">Ettevõte</label>
           </div>
         </div>
 
-        <!-- Person Fields -->
-        <div *ngIf="selectedType() === 'person'" class="mb-3">
+        <!-- Eraisiku väljad -->
+        <div *ngIf="selectedType() === 'PERSON'" class="mb-3">
           <div class="mb-3">
             <label for="firstName" class="form-label">Eesnimi</label>
             <input
@@ -98,19 +100,19 @@
             <div class="invalid-feedback">Perenimi on kohustuslik</div>
           </div>
           <div class="mb-3">
-            <label for="idCode" class="form-label">Isikukood</label>
+            <label for="personalCode" class="form-label">Isikukood</label>
             <input
-              id="idCode"
-              formControlName="idCode"
+              id="personalCode"
+              formControlName="personalCode"
               class="form-control"
-              [class.is-invalid]="participantForm.get('idCode')?.invalid && participantForm.get('idCode')?.touched"
+              [class.is-invalid]="participantForm.get('personalCode')?.invalid && participantForm.get('personalCode')?.touched"
             />
             <div class="invalid-feedback">Isikukood on kohustuslik</div>
           </div>
         </div>
 
-        <!-- Company Fields -->
-        <div *ngIf="selectedType() === 'company'" class="mb-3">
+        <!-- Ettevõtte väljad -->
+        <div *ngIf="selectedType() === 'COMPANY'" class="mb-3">
           <div class="mb-3">
             <label for="companyName" class="form-label">Ettevõtte nimi</label>
             <input
@@ -122,18 +124,18 @@
             <div class="invalid-feedback">Ettevõtte nimi on kohustuslik</div>
           </div>
           <div class="mb-3">
-            <label for="regCode" class="form-label">Registrikood</label>
+            <label for="registrationCode" class="form-label">Registrikood</label>
             <input
-              id="regCode"
-              formControlName="regCode"
+              id="registrationCode"
+              formControlName="registrationCode"
               class="form-control"
-              [class.is-invalid]="participantForm.get('regCode')?.invalid && participantForm.get('regCode')?.touched"
+              [class.is-invalid]="participantForm.get('registrationCode')?.invalid && participantForm.get('registrationCode')?.touched"
             />
             <div class="invalid-feedback">Registrikood on kohustuslik</div>
           </div>
         </div>
 
-        <!-- Shared Fields -->
+        <!-- Ühised väljad -->
         <div class="mb-3">
           <label for="paymentMethod" class="form-label">Maksmisviis</label>
           <select
@@ -142,16 +144,16 @@
             class="form-select"
             [class.is-invalid]="participantForm.get('paymentMethod')?.invalid && participantForm.get('paymentMethod')?.touched"
           >
-            <option value="sularaha">Sularaha</option>
-            <option value="kaart">Kaart</option>
-            <option value="ülekanne">Ülekanne</option>
+            <option value="CASH">Sularaha</option>
+            <option value="CARD">Kaart</option>
+            <option value="BANK_TRANSFER">Ülekanne</option>
           </select>
           <div class="invalid-feedback">Maksmisviis on kohustuslik</div>
         </div>
 
         <div class="mb-3">
-          <label for="extraInfo" class="form-label">Lisainfo</label>
-          <textarea id="extraInfo" formControlName="extraInfo" class="form-control"></textarea>
+          <label for="additionalInfo" class="form-label">Lisainfo</label>
+          <textarea id="additionalInfo" formControlName="additionalInfo" class="form-control"></textarea>
         </div>
 
         <div class="d-flex justify-content-between">
