@@ -1,5 +1,6 @@
 package com.attendify.backend.dto;
 
+import com.attendify.backend.domain.Event;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -28,6 +29,9 @@ public class EventDTO {
     @NotBlank(message = "Event location cannot be empty")
     @Schema(description = "Location where the event will take place.", example = "Tallinn Convention Center", required = true)
     private String location;
+
+    @Schema(description = "Status of event.", example = "ACTIVE", allowableValues = {"ACTIVE", "CANCELLED"})
+    private Event.EventStatus status;
 
     @Schema(description = "Additional information about the event.", example = "Keynote by industry leaders")
     private String additionalInfo;
