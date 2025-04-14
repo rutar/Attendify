@@ -1,25 +1,38 @@
-<section class="events">
-  <div class="column">
-    <h3>Tulevased üritused</h3>
-    <ul>
-      <li *ngFor="let event of upcoming()">
-        <span>{{ event.title }}</span>
-        <span>{{ event.date }}</span>
-        <span>OSAVÕTJAD</span>
-        <button (click)="removeEvent(event)">×</button>
-      </li>
-    </ul>
-    <a routerLink="/events/uus">LISA ÜRITUS</a>
-  </div>
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header">
+      <h2>Üritused</h2>
+    </div>
+    <div class="card-body">
+      <!-- Vea teade -->
+      <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
+      <section class="events">
+        <div class="column">
+          <h3>Tulevased üritused</h3>
+          <ul>
+            <li *ngFor="let event of futureEvents(); trackBy: trackById">
+              <span>{{ event.name }}</span>
+              <span>{{ event.dateTime | date:'medium':'UTC' }}</span>
+              <a routerLink="/events/{{ event.id }}/participants" class="btn btn-sm btn-outline-primary">Osavõtjad</a>
+              <button (click)="removeEvent(event)" class="btn btn-sm btn-outline-danger">Kustuta</button>
+            </li>
+            <li *ngIf="!futureEvents().length" class="text-center">Tulevasi üritusi pole</li>
+          </ul>
+          <a routerLink="/events/new" class="btn btn-primary">Lisa üritus</a>
+        </div>
 
-  <div class="column">
-    <h3>Toimunud üritused</h3>
-    <ul>
-      <li *ngFor="let event of past()">
-        <span>{{ event.title }}</span>
-        <span>{{ event.date }}</span>
-        <span>OSAVÕTJAD</span>
-      </li>
-    </ul>
+        <div class="column">
+          <h3>Toimunud üritused</h3>
+          <ul>
+            <li *ngFor="let event of pastEvents(); trackBy: trackById">
+              <span>{{ event.name }}</span>
+              <span>{{ event.dateTime | date:'medium':'UTC' }}</span>
+              <a routerLink="/events/{{ event.id }}/participants" class="btn btn-sm btn-outline-primary">Osavõtjad</a>
+            </li>
+            <li *ngIf="!pastEvents().length" class="text-center">Toimunud üritusi pole</li>
+          </ul>
+        </div>
+      </section>
+    </div>
   </div>
-</section>
+</div>

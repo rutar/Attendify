@@ -1,4 +1,4 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
+import {Component, OnInit, Signal, signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Event } from '../../models/event.model';
@@ -12,23 +12,33 @@ import { EventService } from '../../services/event.service';
   styleUrls: ['./event-list.component.scss'],
 })
 export class EventListComponent implements OnInit {
-  allEvents = signal<Event[]>([]);
-  upcoming = computed(() => this.allEvents().filter(e => !e.isPast));
-  past = computed(() => this.allEvents().filter(e => e.isPast));
+  // Signaal tulevastele üritustele
+  futureEvents: Signal<Event[]> = signal<Event[]>([]);
+  // Signaal möödunud üritustele
+  pastEvents: Signal<Event[]> = signal<Event[]>([]);
+  // Vea teade
+  error = signal<string | null>(null);
 
-  constructor(private eventService: EventService) {}
-
-  ngOnInit(): void {
-    this.eventService.fetchEvents();
-    this.allEvents.set(this.eventService.getEvents()());
+  constructor(private eventService: EventService) {
   }
 
+  // Komponendi initsialiseerimine
+  ngOnInit(): void {
+    // Laadime üritused serverist
+    this.eventService.fetchEvents();
+    this.futureEvents = this.eventService.getFutureEvents();
+    this.pastEvents = this.eventService.getPastEvents();
+  }
+
+  // Ürituse eemaldamine
   removeEvent(event: Event) {
-    this.eventService.removeEvent(event.id).subscribe(() => {
-      this.allEvents.set(this.eventService.getEvents()());
+    this.eventService.removeEvent(event.id).subscribe({
+      next: () => this.error.set(null),
+      error: () => this.error.set('Ürituse kustutamine ebaõnnestus'),
     });
   }
 
+  // Ürituse jälgimine ID järgi
   trackById(index: number, event: Event): number {
     return event.id;
   }
