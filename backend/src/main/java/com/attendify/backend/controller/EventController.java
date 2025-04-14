@@ -1,9 +1,11 @@
 package com.attendify.backend.controller;
 
-import com.attendify.backend.domain.*;
+import com.attendify.backend.domain.Event;
+import com.attendify.backend.domain.EventParticipant;
 import com.attendify.backend.dto.EventDTO;
 import com.attendify.backend.dto.EventParticipantDTO;
-import com.attendify.backend.dto.ParticipantDTO;
+import com.attendify.backend.mapper.EventMapper;
+import com.attendify.backend.mapper.EventParticipantMapper;
 import com.attendify.backend.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,15 +16,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/events")
@@ -30,7 +31,9 @@ import java.util.stream.Collectors;
 @Tag(name = "Event Management", description = "APIs for managing events and their participants.")
 public class EventController {
     private final EventService eventService;
-    private final ModelMapper modelMapper;
+    private final EventMapper eventMapper;
+    private final EventParticipantMapper eventParticipantMapper;
+
 
     @Operation(summary = "Retrieve all events", description = "Fetches a list of all future and past events.")
     @ApiResponses({
@@ -38,28 +41,15 @@ public class EventController {
                     content = @Content(schema = @Schema(implementation = Map.class)))
     })
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, List<EventDTO>>> getAllEvents() {
         Map<String, List<EventDTO>> response = new HashMap<>();
-
-        List<EventDTO> futureEvents = eventService.getFutureEvents().stream()
-                .map(event -> {
-                    EventDTO dto = modelMapper.map(event, EventDTO.class);
-                    dto.setParticipantCount(event.getParticipantCount());
-                    return dto;
-                })
-                .collect(Collectors.toList());
-
-        List<EventDTO> pastEvents = eventService.getPastEvents().stream()
-                .map(event -> {
-                    EventDTO dto = modelMapper.map(event, EventDTO.class);
-                    dto.setParticipantCount(event.getParticipantCount());
-                    return dto;
-                })
-                .collect(Collectors.toList());
-
-        response.put("futureEvents", futureEvents);
-        response.put("pastEvents", pastEvents);
-
+        response.put("futureEvents", eventService.getFutureEvents().stream()
+                .map(eventMapper::toDto)
+                .toList());
+        response.put("pastEvents", eventService.getPastEvents().stream()
+                .map(eventMapper::toDto)
+                .toList());
         return ResponseEntity.ok(response);
     }
 
@@ -70,12 +60,11 @@ public class EventController {
             @ApiResponse(responseCode = "404", description = "Event not found")
     })
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<EventDTO> getEventById(
             @Parameter(description = "ID of the event to retrieve", example = "1") @PathVariable Long id) {
         Event event = eventService.getEventById(id);
-        EventDTO eventDTO = modelMapper.map(event, EventDTO.class);
-        eventDTO.setParticipantCount(event.getParticipantCount());
-        return ResponseEntity.ok(eventDTO);
+        return ResponseEntity.ok(eventMapper.toDto(event));
     }
 
     @Operation(summary = "Create a new event", description = "Creates a new event with the provided details.")
@@ -87,11 +76,11 @@ public class EventController {
     @PostMapping
     public ResponseEntity<EventDTO> createEvent(
             @Valid @RequestBody @Schema(description = "Event details") EventDTO eventDTO) {
-        Event event = modelMapper.map(eventDTO, Event.class);
+        Event event = eventMapper.toEntity(eventDTO);
         Event createdEvent = eventService.createEvent(event);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(modelMapper.map(createdEvent, EventDTO.class));
+                .body(eventMapper.toDto(createdEvent));
     }
 
     @Operation(summary = "Update an event", description = "Updates an existing event with the provided details.")
@@ -105,10 +94,10 @@ public class EventController {
     public ResponseEntity<EventDTO> updateEvent(
             @Parameter(description = "ID of the event to update", example = "1") @PathVariable Long id,
             @Valid @RequestBody @Schema(description = "Updated event details") EventDTO eventDTO) {
-        Event event = modelMapper.map(eventDTO, Event.class);
+        Event event = eventMapper.toEntity(eventDTO);
         event.setId(id);
         Event updatedEvent = eventService.updateEvent(event);
-        return ResponseEntity.ok(modelMapper.map(updatedEvent, EventDTO.class));
+        return ResponseEntity.ok(eventMapper.toDto(updatedEvent));
     }
 
     @Operation(summary = "Delete an event", description = "Deletes an event by its ID.")
@@ -130,43 +119,13 @@ public class EventController {
             @ApiResponse(responseCode = "404", description = "Event not found")
     })
     @GetMapping("/{id}/participants")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<EventParticipantDTO>> getEventParticipants(
             @Parameter(description = "ID of the event", example = "1") @PathVariable Long id) {
         Event event = eventService.getEventById(id);
         List<EventParticipantDTO> participantDTOs = event.getEventParticipants().stream()
-                .map(eventParticipant -> {
-                    EventParticipantDTO dto = new EventParticipantDTO();
-                    Participant participant = eventParticipant.getParticipant();
-
-                    ParticipantDTO participantDTO = new ParticipantDTO();
-                    participantDTO.setId(participant.getId());
-                    participantDTO.setPaymentMethod(participant.getPaymentMethod());
-                    participantDTO.setAdditionalInfo(participant.getAdditionalInfo());
-
-                    if (participant instanceof Person person) {
-                        participantDTO.setType("PERSON");
-                        participantDTO.setName(person.getFirstName() + " " + person.getLastName());
-                        participantDTO.setCode(person.getPersonalCode());
-                        participantDTO.setEmail(person.getEmail());
-                        participantDTO.setPhone(person.getPhone());
-                    } else if (participant instanceof Company company) {
-                        participantDTO.setType("COMPANY");
-                        participantDTO.setName(company.getCompanyName());
-                        participantDTO.setCode(company.getRegistrationCode());
-                        participantDTO.setParticipantCount(company.getParticipantCount());
-                        participantDTO.setContactPerson(company.getContactPerson());
-                        participantDTO.setEmail(company.getEmail());
-                        participantDTO.setPhone(company.getPhone());
-                    }
-
-                    dto.setParticipant(participantDTO);
-                    dto.setAttendanceStatus(eventParticipant.getAttendanceStatus());
-                    dto.setRegisteredAt(eventParticipant.getRegisteredAt());
-
-                    return dto;
-                })
-                .collect(Collectors.toList());
-
+                .map(eventParticipantMapper::toDto)
+                .toList();
         return ResponseEntity.ok(participantDTOs);
     }
 
@@ -183,10 +142,9 @@ public class EventController {
             @Parameter(description = "ID of the participant", example = "2") @PathVariable Long participantId,
             @Parameter(description = "Attendance status (optional)", example = "REGISTERED") @RequestParam(required = false) EventParticipant.AttendanceStatus status) {
         EventParticipant eventParticipant = eventService.addParticipantToEvent(eventId, participantId, status);
-        EventParticipantDTO dto = modelMapper.map(eventParticipant, EventParticipantDTO.class);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(dto);
+                .body(eventParticipantMapper.toDto(eventParticipant));
     }
 
     @Operation(summary = "Update participant status", description = "Updates the attendance status of a participant for a specific event.")
@@ -202,8 +160,7 @@ public class EventController {
             @Parameter(description = "ID of the participant", example = "2") @PathVariable Long participantId,
             @Parameter(description = "New attendance status", example = "ATTENDED") @RequestParam EventParticipant.AttendanceStatus status) {
         EventParticipant eventParticipant = eventService.updateParticipantStatus(eventId, participantId, status);
-        EventParticipantDTO dto = modelMapper.map(eventParticipant, EventParticipantDTO.class);
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(eventParticipantMapper.toDto(eventParticipant));
     }
 
     @Operation(summary = "Remove participant from event", description = "Removes a participant from a specific event.")
