@@ -1,0 +1,193 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-insert-initial-events
+      author: SA
+      changes:
+        - insert:
+            tableName: events
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '1'
+              - column:
+                  name: name
+                  value: "Tallinna Tehnoloogiakonverents 2025"
+              - column:
+                  name: date_time
+                  value: "2025-06-01T09:00:00Z"
+              - column:
+                  name: location
+                  value: "Tallinna Konverentsikeskus"
+              - column:
+                  name: status
+                  value: "ACTIVE"
+              - column:
+                  name: additional_info
+                  value: "Juhtivate tehnoloogiaekspertide ettekanded"
+
+        - insert:
+            tableName: events
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '2'
+              - column:
+                  name: name
+                  value: "Tartu Muusikafestival 2025"
+              - column:
+                  name: date_time
+                  value: "2025-07-15T18:00:00Z"
+              - column:
+                  name: location
+                  value: "Tartu Raekoja plats"
+              - column:
+                  name: status
+                  value: "ACTIVE"
+              - column:
+                  name: additional_info
+                  value: "Elav muusika ja kohalikud artistid"
+
+        - insert:
+            tableName: events
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '3'
+              - column:
+                  name: name
+                  value: "Pärnu Kultuuripäevad"
+              - column:
+                  name: date_time
+                  value: "2025-08-10T12:00:00Z"
+              - column:
+                  name: location
+                  value: "Pärnu Rannapark"
+              - column:
+                  name: status
+                  value: "ACTIVE"
+              - column:
+                  name: additional_info
+                  value: "Kunst, muusika ja kohalikud toidud"
+
+  - changeSet:
+      id: 008-insert-initial-participants-persons
+      author: SA
+      changes:
+        - insert:
+            tableName: participants
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '1'
+              - column:
+                  name: participant_type
+                  value: "PERSON"
+              - column:
+                  name: payment_method
+                  value: "CARD"
+              - column:
+                  name: additional_info
+                  value: "Eelistab hommikusi üritusi"
+        
+        
+        - insert:
+            tableName: persons
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '1'
+              - column:
+                  name: first_name
+                  value: "Katrin"
+              - column:
+                  name: last_name
+                  value: "Kask"
+              - column:
+                  name: personal_code
+                  value: "49807132750"
+              - column:
+                  name: email
+                  value: "katrin.kask@example.ee"
+              - column:
+                  name: phone
+                  value: "+37255512345"
+  
+  
+  - changeSet:
+      id: 009-insert-initial-participants-companies
+      author: SA
+      changes:
+        - insert:
+            tableName: participants
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '11'
+              - column:
+                  name: participant_type
+                  value: "COMPANY"
+              - column:
+                  name: payment_method
+                  value: "BANK_TRANSFER"
+              - column:
+                  name: additional_info
+                  value: "Sponsoreerib üritust"
+        
+        
+        - insert:
+            tableName: companies
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '11'
+              - column:
+                  name: company_name
+                  value: "TechTrend OÜ"
+              - column:
+                  name: registration_code
+                  value: "12345678"
+              - column:
+                  name: participant_count
+                  valueNumeric: '5'
+              - column:
+                  name: contact_person
+                  value: "Katrin Kask"
+              - column:
+                  name: email
+                  value: "info@techtrend.ee"
+              - column:
+                  name: phone
+                  value: "+37255511111"
+  
+  
+  - changeSet:
+      id: 010-insert-initial-event-participants
+      author: SA
+      changes:
+        - insert:
+            tableName: event_participant
+            columns:
+              - column:
+                  name: event_id
+                  valueNumeric: '1'
+              - column:
+                  name: participant_id
+                  valueNumeric: '1'
+              - column:
+                  name: attendance_status
+                  value: "REGISTERED"
+        
+        
+        - insert:
+            tableName: event_participant
+            columns:
+              - column:
+                  name: event_id
+                  valueNumeric: '1'
+              - column:
+                  name: participant_id
+                  valueNumeric: '11'
+              - column:
+                  name: attendance_status
+                  value: "REGISTERED"
+            
