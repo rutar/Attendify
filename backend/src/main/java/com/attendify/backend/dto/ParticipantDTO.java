@@ -1,11 +1,8 @@
 package com.attendify.backend.dto;
 
-import com.attendify.backend.domain.EventParticipant;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.OffsetDateTime;
 
 @Data
 @NoArgsConstructor

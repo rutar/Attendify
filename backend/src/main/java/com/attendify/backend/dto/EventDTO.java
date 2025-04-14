@@ -23,7 +23,7 @@ public class EventDTO {
     @NotNull(message = "Event date/time cannot be empty")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     @Schema(description = "Date and time of the event (in UTC).", example = "2025-06-01T09:00:00Z", required = true)
-    private Instant eventDateTime;
+    private Instant dateTime;
 
     @NotBlank(message = "Event location cannot be empty")
     @Schema(description = "Location where the event will take place.", example = "Tallinn Convention Center", required = true)
