@@ -70,4 +70,13 @@ public class EventParticipant {
             return Objects.hash(eventId, participantId);
         }
     }
+
+    @Override
+    public String toString() {
+        return "EventParticipant{" +
+                "id=" + id +
+                ", attendanceStatus=" + attendanceStatus +
+                ", registeredAt=" + registeredAt +
+                '}';
+    }
 }
