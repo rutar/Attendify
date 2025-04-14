@@ -1,13 +1,290 @@
 <div class="container mt-4">
-  <div class="card">
+  <!-- Laadimise teade -->
+  <div *ngIf="isLoading()" class="alert alert-info">Laadimine...</div>
+  <!-- Vea teade -->
+  <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
+
+  <!-- Ürituse kaart -->
+  <div *ngIf="event() as evt" class="card">
     <div class="card-header">
-      <h2 class="text-center">{{ event().title }}</h2>
+      <h2 class="text-center">{{ evt.name }}</h2>
     </div>
     <div class="card-body">
-      <p class="card-text">{{ event().description || 'Kirjeldus puudub' }}</p>
-      <p><strong>Kuupäev:</strong> {{ event().date }}</p>
-      <p><strong>Asukoht:</strong> {{ event().location || 'Määramata' }}</p>
-      <a routerLink="/events/{{ event().id }}/participants" class="btn btn-primary">Vaata osavõtjaid</a>
+      <p class="card-text">{{ evt.additionalInfo || 'Kirjeldus puudub' }}</p>
+      <p><strong>Kuupäev:</strong> {{ evt.dateTime }}</p>
+      <p><strong>Asukoht:</strong> {{ evt.location || 'Määramata' }}</p>
+
+      <!-- Osalejate nimekiri -->
+      <h4>Osalejad</h4>
+      <div *ngIf="participants().length === 0" class="alert alert-info">Osalejaid pole veel lisatud.</div>
+      <table *ngIf="participants().length > 0" class="table table-striped table-responsive">
+        <thead>
+        <tr>
+          <th>Nimi</th>
+          <th>Tüüp</th>
+          <th>Makseviis</th>
+          <th>Staatus</th>
+          <th>Tegevused</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let participant of participants()">
+          <td>{{ getParticipantName(participant) }}</td>
+          <td>{{ participant.type === 'PERSON' ? 'Füüsiline isik' : 'Juriidiline isik' }}</td>
+          <td>{{ participant.paymentMethod }}</td>
+          <td>
+            <select
+              [(ngModel)]="participant.status"
+              (change)="updateParticipantStatus(participant.id, participant.status)"
+              class="form-select"
+            >
+              <option value="confirmed">Kinnitatud</option>
+              <option value="pending">Ootel</option>
+              <option value="declined">Keeldutud</option>
+            </select>
+          </td>
+          <td>
+            <button class="btn btn-danger btn-sm" (click)="removeParticipant(participant.id)">
+              Eemalda
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <!-- Olemasoleva osaleja lisamine -->
+      <h4>Lisa olemasolev osaleja</h4>
+      <div class="mb-3">
+        <label for="participantId" class="form-label">Vali osaleja</label>
+        <select
+          class="form-select"
+          id="participantId"
+          [(ngModel)]="selectedParticipantId"
+        >
+          <option [ngValue]="null">Vali osaleja</option>
+          <option *ngFor="let participant of allParticipants()" [ngValue]="participant.id">
+            {{ getParticipantName(participant) }} ({{ participant.type === 'PERSON' ? 'Füüsiline isik' : 'Juriidiline isik' }})
+          </option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="status" class="form-label">Staatus</label>
+        <select class="form-select" id="status" [(ngModel)]="participantStatus">
+          <option value="confirmed">Kinnitatud</option>
+          <option value="pending">Ootel</option>
+          <option value="declined">Keeldutud</option>
+        </select>
+      </div>
+      <button
+        class="btn btn-primary mt-2"
+        (click)="addExistingParticipant()"
+        [disabled]="!selectedParticipantId()"
+      >
+        Lisa osaleja
+      </button>
+
+      <!-- Uue osaleja lisamine -->
+      <h4>Lisa uus osaleja</h4>
+      <div class="mb-3">
+        <label for="participantType" class="form-label">Osaleja tüüp</label>
+        <select
+          class="form-select"
+          id="participantType"
+          [(ngModel)]="newParticipantType"
+          (ngModelChange)="resetNewParticipantForm()"
+        >
+          <option [ngValue]="null">Vali tüüp</option>
+          <option value="PERSON">Füüsiline isik</option>
+          <option value="COMPANY">Juriidiline isik</option>
+        </select>
+      </div>
+
+      <!-- Füüsilise isiku vorm -->
+      <div *ngIf="newParticipantType() === 'PERSON'">
+        <div class="mb-3">
+          <label for="personFirstName" class="form-label">Eesnimi</label>
+          <input
+            type="text"
+            class="form-control"
+            id="personFirstName"
+            [(ngModel)]="newPerson().firstName"
+            placeholder="Sisesta eesnimi"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="personLastName" class="form-label">Perekonnanimi</label>
+          <input
+            type="text"
+            class="form-control"
+            id="personLastName"
+            [(ngModel)]="newPerson().lastName"
+            placeholder="Sisesta perekonnanimi"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="personPersonalCode" class="form-label">Isikukood</label>
+          <input
+            type="text"
+            class="form-control"
+            id="personPersonalCode"
+            [(ngModel)]="newPerson().personalCode"
+            placeholder="Sisesta isikukood"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="personPaymentMethod" class="form-label">Makseviis</label>
+          <input
+            type="text"
+            class="form-control"
+            id="personPaymentMethod"
+            [(ngModel)]="newPerson().paymentMethod"
+            placeholder="Sisesta makseviis"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="personEmail" class="form-label">Email (valikuline)</label>
+          <input
+            type="email"
+            class="form-control"
+            id="personEmail"
+            [(ngModel)]="newPerson().email"
+            placeholder="Sisesta email"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="personPhone" class="form-label">Telefon (valikuline)</label>
+          <input
+            type="text"
+            class="form-control"
+            id="personPhone"
+            [(ngModel)]="newPerson().phone"
+            placeholder="Sisesta telefon"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="personAdditionalInfo" class="form-label">Lisainfo (valikuline)</label>
+          <textarea
+            class="form-control"
+            id="personAdditionalInfo"
+            [(ngModel)]="newPerson().additionalInfo"
+            placeholder="Sisesta lisainfo"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Ettevõtte vorm -->
+      <div *ngIf="newParticipantType() === 'COMPANY'">
+        <div class="mb-3">
+          <label for="companyName" class="form-label">Ettevõtte nimi</label>
+          <input
+            type="text"
+            class="form-control"
+            id="companyName"
+            [(ngModel)]="newCompany().companyName"
+            placeholder="Sisesta ettevõtte nimi"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="companyRegistrationCode" class="form-label">Registrikood</label>
+          <input
+            type="text"
+            class="form-control"
+            id="companyRegistrationCode"
+            [(ngModel)]="newCompany().registrationCode"
+            placeholder="Sisesta registrikood"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="companyPaymentMethod" class="form-label">Makseviis</label>
+          <input
+            type="text"
+            class="form-control"
+            id="companyPaymentMethod"
+            [(ngModel)]="newCompany().paymentMethod"
+            placeholder="Sisesta makseviis"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="companyParticipantCount" class="form-label">Osalejate arv (valikuline)</label>
+          <input
+            type="number"
+            class="form-control"
+            id="companyParticipantCount"
+            [(ngModel)]="newCompany().participantCount"
+            placeholder="Sisesta osalejate arv"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="companyContactPerson" class="form-label">Kontaktisik (valikuline)</label>
+          <input
+            type="text"
+            class="form-control"
+            id="companyContactPerson"
+            [(ngModel)]="newCompany().contactPerson"
+            placeholder="Sisesta kontaktisiku nimi"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="companyEmail" class="form-label">Email (valikuline)</label>
+          <input
+            type="email"
+            class="form-control"
+            id="companyEmail"
+            [(ngModel)]="newCompany().email"
+            placeholder="Sisesta email"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="companyPhone" class="form-label">Telefon (valikuline)</label>
+          <input
+            type="text"
+            class="form-control"
+            id="companyPhone"
+            [(ngModel)]="newCompany().phone"
+            placeholder="Sisesta telefon"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="companyAdditionalInfo" class="form-label">Lisainfo (valikuline)</label>
+          <textarea
+            class="form-control"
+            id="companyAdditionalInfo"
+            [(ngModel)]="newCompany().additionalInfo"
+            placeholder="Sisesta lisainfo"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Uue osaleja staatuse valik -->
+      <div *ngIf="newParticipantType()" class="mb-3">
+        <label for="newStatus" class="form-label">Staatus</label>
+        <select class="form-select" id="newStatus" [(ngModel)]="participantStatus">
+          <option value="confirmed">Kinnitatud</option>
+          <option value="pending">Ootel</option>
+          <option value="declined">Keeldutud</option>
+        </select>
+      </div>
+
+      <!-- Uue osaleja loomise nupp -->
+      <button
+        *ngIf="newParticipantType()"
+        class="btn btn-primary mt-2"
+        (click)="createNewParticipant()"
+        [disabled]="
+          newParticipantType() === 'PERSON'
+            ? !newPerson().firstName || !newPerson().lastName || !newPerson().personalCode || !newPerson().paymentMethod
+            : !newCompany().companyName || !newCompany().registrationCode || !newCompany().paymentMethod
+        "
+      >
+        Loo ja lisa osaleja
+      </button>
     </div>
   </div>
 </div>
