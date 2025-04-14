@@ -27,8 +27,8 @@ springdoc:
     api-docs: enabled=true
     swagger-ui: enabled=true
 
-#logging:
-#  level:
-#    org.springframework: DEBUG
-#    org.hibernate: DEBUG
-#    com.attendify: DEBUG
+logging:
+  level:
+    org.springframework: INFO
+    org.hibernate: INFO
+    com.attendify: INFO
