@@ -45,6 +45,7 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
+    @Builder.Default
     private EventStatus status = EventStatus.ACTIVE;
 
     @Size(max = 1500, message = "Additional info must not exceed 1500 characters")
@@ -60,6 +61,7 @@ public class Event {
     private Instant updatedAt;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<EventParticipant> eventParticipants = new ArrayList<>();
 
     public enum EventStatus {
