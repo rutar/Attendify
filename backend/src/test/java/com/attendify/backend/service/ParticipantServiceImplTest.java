@@ -5,15 +5,17 @@ import com.attendify.backend.domain.Participant;
 import com.attendify.backend.domain.Person;
 import com.attendify.backend.exception.DuplicateResourceException;
 import com.attendify.backend.exception.ResourceNotFoundException;
-import com.attendify.backend.repository.CompanyRepository;
 import com.attendify.backend.repository.ParticipantRepository;
-import com.attendify.backend.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,12 +29,6 @@ class ParticipantServiceImplTest {
 
     @Mock
     private ParticipantRepository participantRepository;
-
-    @Mock
-    private PersonRepository personRepository;
-
-    @Mock
-    private CompanyRepository companyRepository;
 
     @InjectMocks
     private ParticipantServiceImpl participantService;
@@ -49,6 +45,8 @@ class ParticipantServiceImplTest {
         person.setPersonalCode("38001150120");
         person.setPaymentMethod(Participant.PaymentMethod.BANK_TRANSFER);
         person.setAdditionalInfo("VIP guest");
+        person.setEmail("john.doe@example.com");
+        person.setPhone("+37255512345");
 
         company = new Company();
         company.setId(2L);
@@ -57,20 +55,24 @@ class ParticipantServiceImplTest {
         company.setParticipantCount(5);
         company.setPaymentMethod(Participant.PaymentMethod.CARD);
         company.setAdditionalInfo("Gold sponsor");
+        company.setEmail("info@testcompany.com");
+        company.setPhone("+37255598765");
     }
 
     @Test
-    void getAllParticipants_ShouldReturnAllParticipants() {
+    void searchParticipants_ShouldReturnPageOfParticipants() {
         // Arrange
-        List<Participant> expectedParticipants = Arrays.asList(person, company);
-        when(participantRepository.findAll()).thenReturn(expectedParticipants);
+        String query = "";
+        Pageable pageable = PageRequest.of(0, 10); // page number, page size
+        Page<Participant> expectedPage = new PageImpl<>(Arrays.asList(person, company));
+        when(participantRepository.searchParticipants(query, pageable)).thenReturn(expectedPage);
 
         // Act
-        List<Participant> actualParticipants = participantService.getAllParticipants();
+        Page<Participant> resultPage = participantService.searchParticipants(query, pageable);
 
         // Assert
-        assertEquals(expectedParticipants, actualParticipants);
-        verify(participantRepository, times(1)).findAll();
+        assertEquals(expectedPage, resultPage);
+        verify(participantRepository, times(1)).searchParticipants(query, pageable);
     }
 
     @Test
@@ -97,202 +99,226 @@ class ParticipantServiceImplTest {
     }
 
     @Test
-    void createPerson_WithValidData_ShouldSaveAndReturnPerson() {
+    void createParticipant_WithValidPerson_ShouldSaveAndReturnPerson() {
         // Arrange
-        when(personRepository.existsByPersonalCode(person.getPersonalCode())).thenReturn(false);
-        when(personRepository.save(person)).thenReturn(person);
+        when(participantRepository.existsByPersonalCode(person.getPersonalCode())).thenReturn(false);
+        when(participantRepository.save(person)).thenReturn(person);
 
         // Act
-        Person result = participantService.createPerson(person);
+        Participant result = participantService.createParticipant(person);
 
         // Assert
         assertEquals(person, result);
-        verify(personRepository, times(1)).existsByPersonalCode(person.getPersonalCode());
-        verify(personRepository, times(1)).save(person);
+        verify(participantRepository, times(1)).existsByPersonalCode(person.getPersonalCode());
+        verify(participantRepository, times(1)).save(person);
     }
 
     @Test
-    void createPerson_WithDuplicatePersonalCode_ShouldThrowDuplicateResourceException() {
+    void createParticipant_WithDuplicatePersonalCode_ShouldThrowDuplicateResourceException() {
         // Arrange
-        when(personRepository.existsByPersonalCode(person.getPersonalCode())).thenReturn(true);
+        when(participantRepository.existsByPersonalCode(person.getPersonalCode())).thenReturn(true);
 
         // Act & Assert
-        assertThrows(DuplicateResourceException.class, () -> participantService.createPerson(person));
-        verify(personRepository, times(1)).existsByPersonalCode(person.getPersonalCode());
-        verify(personRepository, never()).save(any());
+        assertThrows(DuplicateResourceException.class, () -> participantService.createParticipant(person));
+        verify(participantRepository, times(1)).existsByPersonalCode(person.getPersonalCode());
+        verify(participantRepository, never()).save(any());
     }
 
     @Test
-    void createPerson_WithInvalidPersonalCode_ShouldThrowIllegalArgumentException() {
+    void createParticipant_WithInvalidPersonalCode_ShouldThrowIllegalArgumentException() {
         // Arrange
         person.setPersonalCode("12345678901"); // Invalid personal code
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> participantService.createPerson(person));
-        verify(personRepository, never()).existsByPersonalCode(any());
-        verify(personRepository, never()).save(any());
+        assertThrows(IllegalArgumentException.class, () -> participantService.createParticipant(person));
+        verify(participantRepository, never()).existsByPersonalCode(any());
+        verify(participantRepository, never()).save(any());
     }
 
     @Test
-    void createCompany_WithValidData_ShouldSaveAndReturnCompany() {
+    void createParticipant_WithValidCompany_ShouldSaveAndReturnCompany() {
         // Arrange
-        when(companyRepository.existsByRegistrationCode(company.getRegistrationCode())).thenReturn(false);
-        when(companyRepository.save(company)).thenReturn(company);
+        when(participantRepository.existsByRegistrationCode(company.getRegistrationCode())).thenReturn(false);
+        when(participantRepository.save(company)).thenReturn(company);
 
         // Act
-        Company result = participantService.createCompany(company);
+        Participant result = participantService.createParticipant(company);
 
         // Assert
         assertEquals(company, result);
-        verify(companyRepository, times(1)).existsByRegistrationCode(company.getRegistrationCode());
-        verify(companyRepository, times(1)).save(company);
+        verify(participantRepository, times(1)).existsByRegistrationCode(company.getRegistrationCode());
+        verify(participantRepository, times(1)).save(company);
     }
 
     @Test
-    void createCompany_WithDuplicateRegistrationCode_ShouldThrowDuplicateResourceException() {
+    void createParticipant_WithDuplicateRegistrationCode_ShouldThrowDuplicateResourceException() {
         // Arrange
-        when(companyRepository.existsByRegistrationCode(company.getRegistrationCode())).thenReturn(true);
+        when(participantRepository.existsByRegistrationCode(company.getRegistrationCode())).thenReturn(true);
 
         // Act & Assert
-        assertThrows(DuplicateResourceException.class, () -> participantService.createCompany(company));
-        verify(companyRepository, times(1)).existsByRegistrationCode(company.getRegistrationCode());
-        verify(companyRepository, never()).save(any());
+        assertThrows(DuplicateResourceException.class, () -> participantService.createParticipant(company));
+        verify(participantRepository, times(1)).existsByRegistrationCode(company.getRegistrationCode());
+        verify(participantRepository, never()).save(any());
     }
 
     @Test
-    void createCompany_WithNullParticipantCount_ShouldSetDefaultValue() {
+    void createParticipant_WithInvalidRegistrationCode_ShouldThrowIllegalArgumentException() {
+        // Arrange
+        company.setRegistrationCode("12345"); // Invalid registration code (not 8 digits)
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> participantService.createParticipant(company));
+        verify(participantRepository, never()).existsByRegistrationCode(any());
+        verify(participantRepository, never()).save(any());
+    }
+
+    @Test
+    void createParticipant_WithNullParticipantCount_ShouldSetDefaultValue() {
         // Arrange
         company.setParticipantCount(null);
-        when(companyRepository.existsByRegistrationCode(company.getRegistrationCode())).thenReturn(false);
-        when(companyRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(participantRepository.existsByRegistrationCode(company.getRegistrationCode())).thenReturn(false);
+        when(participantRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        Company result = participantService.createCompany(company);
+        Participant result = participantService.createParticipant(company);
 
         // Assert
-        assertEquals(1, result.getParticipantCount());
-        verify(companyRepository, times(1)).existsByRegistrationCode(company.getRegistrationCode());
-        verify(companyRepository, times(1)).save(any(Company.class));
+        assertEquals(1, ((Company) result).getParticipantCount());
+        verify(participantRepository, times(1)).existsByRegistrationCode(company.getRegistrationCode());
+        verify(participantRepository, times(1)).save(any(Company.class));
     }
 
     @Test
-    void createCompany_WithZeroParticipantCount_ShouldSetDefaultValue() {
+    void createParticipant_WithZeroParticipantCount_ShouldSetDefaultValue() {
         // Arrange
         company.setParticipantCount(0);
-        when(companyRepository.existsByRegistrationCode(company.getRegistrationCode())).thenReturn(false);
-        when(companyRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(participantRepository.existsByRegistrationCode(company.getRegistrationCode())).thenReturn(false);
+        when(participantRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        Company result = participantService.createCompany(company);
+        Participant result = participantService.createParticipant(company);
 
         // Assert
-        assertEquals(1, result.getParticipantCount());
-        verify(companyRepository, times(1)).existsByRegistrationCode(company.getRegistrationCode());
-        verify(companyRepository, times(1)).save(any(Company.class));
+        assertEquals(1, ((Company) result).getParticipantCount());
+        verify(participantRepository, times(1)).existsByRegistrationCode(company.getRegistrationCode());
+        verify(participantRepository, times(1)).save(any(Company.class));
     }
 
     @Test
-    void updatePerson_WithValidData_ShouldUpdateAndReturnPerson() {
+    void updateParticipant_WithValidPerson_ShouldUpdateAndReturnPerson() {
         // Arrange
         Person updatedPerson = new Person();
         updatedPerson.setFirstName("Updated");
         updatedPerson.setLastName("Name");
-        updatedPerson.setPersonalCode("39506070819"); // Same personal code
+        updatedPerson.setPersonalCode("39506070819"); // Different valid personal code
         updatedPerson.setPaymentMethod(Participant.PaymentMethod.CASH);
         updatedPerson.setAdditionalInfo("Updated info");
+        updatedPerson.setEmail("updated.doe@example.com");
+        updatedPerson.setPhone("+37255567890");
 
         when(participantRepository.findById(1L)).thenReturn(Optional.of(person));
-        when(personRepository.save(any(Person.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(participantRepository.existsByPersonalCode("39506070819")).thenReturn(false);
+        when(participantRepository.save(any(Person.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        Person result = participantService.updatePerson(1L, updatedPerson);
+        Participant result = participantService.updateParticipant(1L, updatedPerson);
 
         // Assert
-        assertEquals("Updated", result.getFirstName());
-        assertEquals("Name", result.getLastName());
+        assertEquals("Updated", ((Person) result).getFirstName());
+        assertEquals("Name", ((Person) result).getLastName());
+        assertEquals("39506070819", ((Person) result).getPersonalCode());
         assertEquals(Participant.PaymentMethod.CASH, result.getPaymentMethod());
         assertEquals("Updated info", result.getAdditionalInfo());
+
         verify(participantRepository, times(1)).findById(1L);
-        verify(personRepository, times(1)).save(any(Person.class));
+        verify(participantRepository, times(1)).existsByPersonalCode("39506070819");
+        verify(participantRepository, times(1)).save(any(Person.class));
     }
 
     @Test
-    void updatePerson_WithChangedDuplicatePersonalCode_ShouldThrowDuplicateResourceException() {
+    void updateParticipant_WithChangedDuplicatePersonalCode_ShouldThrowDuplicateResourceException() {
         // Arrange
         Person updatedPerson = new Person();
         updatedPerson.setPersonalCode("49506070819"); // Different personal code
 
         when(participantRepository.findById(1L)).thenReturn(Optional.of(person));
-        when(personRepository.existsByPersonalCode(updatedPerson.getPersonalCode())).thenReturn(true);
+        when(participantRepository.existsByPersonalCode("49506070819")).thenReturn(true);
 
         // Act & Assert
-        assertThrows(DuplicateResourceException.class, () -> participantService.updatePerson(1L, updatedPerson));
+        assertThrows(DuplicateResourceException.class, () -> participantService.updateParticipant(1L, updatedPerson));
         verify(participantRepository, times(1)).findById(1L);
-        verify(personRepository, times(1)).existsByPersonalCode(updatedPerson.getPersonalCode());
-        verify(personRepository, never()).save(any());
+        verify(participantRepository, times(1)).existsByPersonalCode("49506070819");
+        verify(participantRepository, never()).save(any());
     }
 
     @Test
-    void updatePerson_WhenParticipantIsNotPerson_ShouldThrowIllegalArgumentException() {
+    void updateParticipant_WhenParticipantTypeMismatchForPerson_ShouldThrowIllegalArgumentException() {
         // Arrange
         when(participantRepository.findById(2L)).thenReturn(Optional.of(company));
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> participantService.updatePerson(2L, person));
+        assertThrows(IllegalArgumentException.class, () -> participantService.updateParticipant(2L, person));
         verify(participantRepository, times(1)).findById(2L);
-        verify(personRepository, never()).save(any());
+        verify(participantRepository, never()).save(any());
     }
 
     @Test
-    void updateCompany_WithValidData_ShouldUpdateAndReturnCompany() {
+    void updateParticipant_WithValidCompany_ShouldUpdateAndReturnCompany() {
         // Arrange
         Company updatedCompany = new Company();
         updatedCompany.setCompanyName("Updated Company");
-        updatedCompany.setRegistrationCode("12345678"); // Same registration code
+        updatedCompany.setRegistrationCode("87654321"); // Different registration code
         updatedCompany.setParticipantCount(10);
-        updatedCompany.setPaymentMethod(Participant.PaymentMethod.CARD);
+        updatedCompany.setContactPerson("Updated Contact");
+        updatedCompany.setPaymentMethod(Participant.PaymentMethod.BANK_TRANSFER);
         updatedCompany.setAdditionalInfo("Updated info");
+        updatedCompany.setEmail("updated@company.com");
+        updatedCompany.setPhone("+37255500000");
 
         when(participantRepository.findById(2L)).thenReturn(Optional.of(company));
-        when(companyRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(participantRepository.existsByRegistrationCode("87654321")).thenReturn(false);
+        when(participantRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        Company result = participantService.updateCompany(2L, updatedCompany);
+        Participant result = participantService.updateParticipant(2L, updatedCompany);
 
         // Assert
-        assertEquals("Updated Company", result.getCompanyName());
-        assertEquals(10, result.getParticipantCount());
-        assertEquals(Participant.PaymentMethod.CARD, result.getPaymentMethod());
+        assertEquals("Updated Company", ((Company) result).getCompanyName());
+        assertEquals("87654321", ((Company) result).getRegistrationCode());
+        assertEquals(10, ((Company) result).getParticipantCount());
+        assertEquals("Updated Contact", ((Company) result).getContactPerson());
+        assertEquals(Participant.PaymentMethod.BANK_TRANSFER, result.getPaymentMethod());
         assertEquals("Updated info", result.getAdditionalInfo());
         verify(participantRepository, times(1)).findById(2L);
-        verify(companyRepository, times(1)).save(any(Company.class));
+        verify(participantRepository, times(1)).existsByRegistrationCode("87654321");
+        verify(participantRepository, times(1)).save(any(Company.class));
     }
 
     @Test
-    void updateCompany_WithChangedDuplicateRegistrationCode_ShouldThrowDuplicateResourceException() {
+    void updateParticipant_WithChangedDuplicateRegistrationCode_ShouldThrowDuplicateResourceException() {
         // Arrange
         Company updatedCompany = new Company();
         updatedCompany.setRegistrationCode("87654321"); // Different registration code
 
         when(participantRepository.findById(2L)).thenReturn(Optional.of(company));
-        when(companyRepository.existsByRegistrationCode(updatedCompany.getRegistrationCode())).thenReturn(true);
+        when(participantRepository.existsByRegistrationCode("87654321")).thenReturn(true);
 
         // Act & Assert
-        assertThrows(DuplicateResourceException.class, () -> participantService.updateCompany(2L, updatedCompany));
+        assertThrows(DuplicateResourceException.class, () -> participantService.updateParticipant(2L, updatedCompany));
         verify(participantRepository, times(1)).findById(2L);
-        verify(companyRepository, times(1)).existsByRegistrationCode(updatedCompany.getRegistrationCode());
-        verify(companyRepository, never()).save(any());
+        verify(participantRepository, times(1)).existsByRegistrationCode("87654321");
+        verify(participantRepository, never()).save(any());
     }
 
     @Test
-    void updateCompany_WhenParticipantIsNotCompany_ShouldThrowIllegalArgumentException() {
+    void updateParticipant_WhenParticipantTypeMismatchForCompany_ShouldThrowIllegalArgumentException() {
         // Arrange
         when(participantRepository.findById(1L)).thenReturn(Optional.of(person));
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> participantService.updateCompany(1L, company));
+        assertThrows(IllegalArgumentException.class, () -> participantService.updateParticipant(1L, company));
         verify(participantRepository, times(1)).findById(1L);
-        verify(companyRepository, never()).save(any());
+        verify(participantRepository, never()).save(any());
     }
 
     @Test
@@ -339,5 +365,32 @@ class ParticipantServiceImplTest {
     void validateEstonianPersonalCode_WithInvalidChecksum_ShouldThrowIllegalArgumentException() {
         // Valid format but invalid checksum
         assertThrows(IllegalArgumentException.class, () -> participantService.validateEstonianPersonalCode("39506070810"));
+    }
+
+    @Test
+    void validateRegistrationCode_WithValidCode_ShouldNotThrowException() {
+        // Valid registration codes
+        assertDoesNotThrow(() -> participantService.validateRegistrationCode("12345678"));
+        assertDoesNotThrow(() -> participantService.validateRegistrationCode("87654321"));
+    }
+
+    @Test
+    void validateRegistrationCode_WithInvalidFormat_ShouldThrowIllegalArgumentException() {
+        // Invalid formats
+        assertThrows(IllegalArgumentException.class, () -> {
+            participantService.validateRegistrationCode("123");
+        });
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            participantService.validateRegistrationCode("1234567");
+        });
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            participantService.validateRegistrationCode("123456789");
+        });
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            participantService.validateRegistrationCode("1234567a");
+        });
     }
 }

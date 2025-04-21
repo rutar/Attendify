@@ -1,14 +1,9 @@
 package com.attendify.backend.service;
 
-import com.attendify.backend.domain.Company;
 import com.attendify.backend.domain.Event;
-import com.attendify.backend.domain.EventParticipant;
 import com.attendify.backend.exception.ResourceNotFoundException;
-import com.attendify.backend.repository.EventParticipantRepository;
 import com.attendify.backend.repository.EventRepository;
-import com.attendify.backend.repository.ParticipantRepository;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,335 +17,216 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class EventServiceImplTest {
+public class EventServiceImplTest {
 
     @Mock
     private EventRepository eventRepository;
 
-    @Mock
-    private ParticipantRepository participantRepository;
-
-    @Mock
-    private EventParticipantRepository eventParticipantRepository;
-
     @InjectMocks
     private EventServiceImpl eventService;
 
-    private Company createTestCompany() {
-        Company company = new Company();
-        company.setId(1L);
-        company.setCompanyName("Test Company");
-        company.setRegistrationCode("12345678");
-        return company;
+    private Event event1;
+    private Event event2;
+    private Instant now;
+
+    @BeforeEach
+    void setUp() {
+        now = Instant.now();
+
+        // Setup test events
+        event1 = new Event();
+        event1.setId(1L);
+        event1.setName("Test Event 1");
+        event1.setDateTime(now.plusSeconds(86400)); // tomorrow
+        event1.setLocation("Test Location 1");
+        event1.setStatus("SCHEDULED");
+        event1.setAdditionalInfo("Test Info 1");
+
+        event2 = new Event();
+        event2.setId(2L);
+        event2.setName("Test Event 2");
+        event2.setDateTime(now.minusSeconds(86400)); // yesterday
+        event2.setLocation("Test Location 2");
+        event2.setStatus("COMPLETED");
+        event2.setAdditionalInfo("Test Info 2");
     }
 
-    private Event createTestEvent(boolean future) {
-        Event event = new Event();
-        event.setId(1L);
-        event.setDateTime(future ? Instant.now().plusSeconds(3600) : Instant.now().minusSeconds(3600));
-        return event;
-    }
-
-
-// General functionality test
-@Nested
-class EventCrudTests {
     @Test
     void getFutureEvents_ShouldReturnFutureEvents() {
         // Arrange
-        Event event = createTestEvent(true);
-        when(eventRepository.findByDateTimeAfterOrderByDateTime(any())).thenReturn(List.of(event));
+        when(eventRepository.findByDateTimeAfterOrderByDateTime(any(Instant.class)))
+                .thenReturn(Collections.singletonList(event1));
 
         // Act
         List<Event> result = eventService.getFutureEvents();
 
         // Assert
         assertEquals(1, result.size());
-        assertTrue(result.getFirst().isFutureEvent());
-        verify(eventRepository).findByDateTimeAfterOrderByDateTime(any());
+        assertEquals("Test Event 1", result.getFirst().getName());
+        verify(eventRepository, times(1)).findByDateTimeAfterOrderByDateTime(any(Instant.class));
     }
 
     @Test
     void getPastEvents_ShouldReturnPastEvents() {
         // Arrange
-        Event event = createTestEvent(false);
-        when(eventRepository.findByDateTimeBeforeOrderByDateTimeDesc(any())).thenReturn(List.of(event));
+        when(eventRepository.findByDateTimeBeforeOrderByDateTimeDesc(any(Instant.class)))
+                .thenReturn(Collections.singletonList(event2));
 
         // Act
         List<Event> result = eventService.getPastEvents();
 
         // Assert
         assertEquals(1, result.size());
-        assertFalse(result.getFirst().isFutureEvent());
-        verify(eventRepository).findByDateTimeBeforeOrderByDateTimeDesc(any());
+        assertEquals("Test Event 2", result.getFirst().getName());
+        verify(eventRepository, times(1)).findByDateTimeBeforeOrderByDateTimeDesc(any(Instant.class));
     }
 
     @Test
-    void getEventById_WhenExists_ShouldReturnEvent() {
+    void getEventById_WithValidId_ShouldReturnEvent() {
         // Arrange
-        Long eventId = 1L;
-        Event event = createTestEvent(true);
-        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event1));
 
         // Act
-        Event result = eventService.getEventById(eventId);
+        Event result = eventService.getEventById(1L);
 
         // Assert
         assertNotNull(result);
-        assertEquals(eventId, result.getId());
-        verify(eventRepository).findById(eventId);
+        assertEquals(1L, result.getId());
+        assertEquals("Test Event 1", result.getName());
+        verify(eventRepository, times(1)).findById(1L);
     }
 
     @Test
-    void getEventById_WhenNotExists_ShouldThrowException() {
+    void getEventById_WithInvalidId_ShouldThrowException() {
         // Arrange
-        Long eventId = 1L;
-        when(eventRepository.findById(eventId)).thenReturn(Optional.empty());
+        when(eventRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(ResourceNotFoundException.class, () -> eventService.getEventById(eventId));
-        verify(eventRepository).findById(eventId);
+        assertThrows(ResourceNotFoundException.class, () -> eventService.getEventById(999L));
+        verify(eventRepository, times(1)).findById(999L);
     }
 
     @Test
-    void createEvent_WithFutureDate_ShouldSaveEvent() {
+    void createEvent_WithValidEvent_ShouldSaveAndReturnEvent() {
         // Arrange
-        Event event = createTestEvent(true);
-        when(eventRepository.save(any())).thenReturn(event);
+        when(eventRepository.save(any(Event.class))).thenReturn(event1);
 
         // Act
-        Event result = eventService.createEvent(event);
+        Event result = eventService.createEvent(event1);
 
         // Assert
         assertNotNull(result);
-        verify(eventRepository).save(event);
+        assertEquals("Test Event 1", result.getName());
+        verify(eventRepository, times(1)).save(event1);
     }
 
     @Test
-    void createEvent_WithPastDate_ShouldThrowException() {
+    void createEvent_WithInvalidEvent_ShouldThrowException() {
         // Arrange
-        Event event = createTestEvent(false);
+        Event invalidEvent = new Event();
+        invalidEvent.setDateTime(now);
+        invalidEvent.setStatus("SCHEDULED");
+        // Missing name
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> eventService.createEvent(event));
-        verify(eventRepository, never()).save(any());
+        assertThrows(IllegalArgumentException.class, () -> eventService.createEvent(invalidEvent));
+        verify(eventRepository, never()).save(any(Event.class));
     }
 
     @Test
-    void updateEvent_WhenExists_ShouldUpdateEvent() {
+    void updateEvent_WithValidEvent_ShouldUpdateAndReturnEvent() {
         // Arrange
-        Long eventId = 1L;
-        Event existingEvent = createTestEvent(true);
-        existingEvent.setCreatedAt(Instant.now());
-        existingEvent.setEventParticipants(Collections.emptyList());
+        Event updatedEvent = new Event();
+        updatedEvent.setId(1L);
+        updatedEvent.setName("Updated Event");
+        updatedEvent.setDateTime(now.plusSeconds(3600) );
+        updatedEvent.setLocation("Updated Location");
+        updatedEvent.setStatus("POSTPONED");
+        updatedEvent.setAdditionalInfo("Updated Info");
 
-        Event updatedEvent = createTestEvent(true);
-        updatedEvent.setId(eventId);
-        updatedEvent.setName("Updated Name");
-
-        when(eventRepository.findById(eventId)).thenReturn(Optional.of(existingEvent));
-        when(eventRepository.save(any())).thenReturn(updatedEvent);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event1));
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         Event result = eventService.updateEvent(updatedEvent);
 
         // Assert
-        assertEquals("Updated Name", result.getName());
-        verify(eventRepository).save(updatedEvent);
-    }
-
-    @Test
-    void deleteEvent_WhenFutureEvent_ShouldDelete() {
-        // Arrange
-        Long eventId = 1L;
-        Event event = createTestEvent(true);
-        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
-
-        // Act
-        eventService.deleteEvent(eventId);
-
-        // Assert
-        verify(eventRepository).delete(event);
-    }
-
-    @Test
-    void addParticipantToEvent_ShouldCreateRelationship() {
-        // Arrange
-        Long eventId = 1L;
-        Long companyId = 1L;
-        Event event = createTestEvent(true);
-        Company company = createTestCompany();
-
-        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
-        when(participantRepository.findById(companyId)).thenReturn(Optional.of(company));
-
-        // Act
-        EventParticipant result = eventService.addParticipantToEvent(eventId, companyId, null);
-
-        // Assert
         assertNotNull(result);
-        verify(eventRepository).save(event);
+        assertEquals("Updated Event", result.getName());
+        assertEquals("Updated Location", result.getLocation());
+        assertEquals("POSTPONED", result.getStatus());
+        assertEquals("Updated Info", result.getAdditionalInfo());
+        verify(eventRepository, times(1)).findById(1L);
+        verify(eventRepository, times(1)).save(any(Event.class));
     }
 
     @Test
-    void updateParticipantStatus_ShouldUpdateStatus() {
+    void updateEvent_WithInvalidEvent_ShouldThrowException() {
         // Arrange
-        Long eventId = 1L;
-        Long companyId = 1L;
-        Event event = createTestEvent(true);
-        Company company = createTestCompany();
-        EventParticipant eventParticipant = new EventParticipant(event, company);
-        event.getEventParticipants().add(eventParticipant);
+        Event invalidEvent = new Event();
+        invalidEvent.setId(1L);
+        invalidEvent.setDateTime(now);
+        invalidEvent.setLocation("Updated Location");
+        // Missing name and status
 
-        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
-        when(participantRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event1));
 
-        // Act
-        EventParticipant result = eventService.updateParticipantStatus(
-                eventId, companyId, EventParticipant.AttendanceStatus.NO_SHOW
-        );
-
-        // Assert
-        assertEquals(EventParticipant.AttendanceStatus.NO_SHOW, result.getAttendanceStatus());
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> eventService.updateEvent(invalidEvent));
+        verify(eventRepository, times(1)).findById(1L);
+        verify(eventRepository, never()).save(any(Event.class));
     }
 
     @Test
-    void removeParticipantFromEvent_ShouldDeleteRelationship() {
+    void deleteEvent_WithValidId_ShouldDeleteEvent() {
         // Arrange
-        Long eventId = 1L;
-        Long companyId = 1L;
-        Event event = createTestEvent(true);
-        Company company = createTestCompany();
-        EventParticipant eventParticipant = new EventParticipant(event, company);
-        event.getEventParticipants().add(eventParticipant);
-        company.getEventParticipants().add(eventParticipant);
-
-        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
-        when(participantRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event1));
+        doNothing().when(eventRepository).delete(any(Event.class));
 
         // Act
-        eventService.removeParticipantFromEvent(eventId, companyId);
+        eventService.deleteEvent(1L);
 
         // Assert
-        verify(eventRepository).save(event);
+        verify(eventRepository, times(1)).findById(1L);
+        verify(eventRepository, times(1)).delete(event1);
     }
-}
 
-    @Nested
-    class CascadeOpsTests {
-        @Test
-        @Transactional
-        void createEvent_WithParticipants_ShouldCascadeSave() {
-            // Arrange
-            Event event = createTestEvent(true);
-            event.setId(1L); // Устанавливаем ID для event
-            Company company = createTestCompany();
-            company.setId(1L); // Устанавливаем ID для participant
+    @Test
+    void deleteEvent_WithInvalidId_ShouldThrowException() {
+        // Arrange
+        when(eventRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-            EventParticipant participant = new EventParticipant(event, company);
-            event.setEventParticipants(List.of(participant));
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> eventService.deleteEvent(999L));
+        verify(eventRepository, times(1)).findById(999L);
+        verify(eventRepository, never()).delete(any(Event.class));
+    }
 
-            when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> {
-                Event savedEvent = invocation.getArgument(0);
-                savedEvent.getEventParticipants().forEach(ep -> {
-                    // Устанавливаем составной ID
-                    ep.setId(new EventParticipant.EventParticipantId(
-                            savedEvent.getId(),
-                            ep.getParticipant().getId()
-                    ));
-                });
-                return savedEvent;
-            });
+    @Test
+    void validateEvent_WithMissingName_ShouldThrowException() {
+        // Arrange
+        Event invalidEvent = new Event();
+        invalidEvent.setDateTime(now);
+        invalidEvent.setStatus("SCHEDULED");
+        // Missing name
 
-            // Act
-            Event result = eventService.createEvent(event);
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> eventService.createEvent(invalidEvent));
+    }
 
-            // Assert
-            assertNotNull(result.getId());
-            assertEquals(1, result.getEventParticipants().size());
-            assertNotNull(result.getEventParticipants().getFirst().getId());
-            assertEquals(new EventParticipant.EventParticipantId(1L, 1L),
-                    result.getEventParticipants().getFirst().getId());
-            verify(eventRepository).save(event);
-        }
+    @Test
+    void validateEvent_WithMissingDateTime_ShouldThrowException() {
+        // Arrange
+        Event invalidEvent = new Event();
+        invalidEvent.setName("Test Event");
+        invalidEvent.setStatus("SCHEDULED");
+        // Missing dateTime
 
-
-        @Test
-        @Transactional
-        void removeParticipantFromEvent_ShouldCleanUpBothSides() {
-            // Arrange - Set up test data
-            Long eventId = 1L;
-            Long companyId = 1L;
-
-            // Create test event and set ID
-            Event event = createTestEvent(true);
-            event.setId(eventId);
-
-            // Create test company (participant) and set ID
-            Company company = createTestCompany();
-            company.setId(companyId);
-
-            // Create the association between event and participant
-            EventParticipant participant = new EventParticipant(event, company);
-            participant.setId(new EventParticipant.EventParticipantId(eventId, companyId));
-
-            // Add to both sides of the bidirectional relationship
-            event.getEventParticipants().add(participant);
-            company.getEventParticipants().add(participant);
-
-            // Mock repository responses
-            when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
-            when(participantRepository.findById(companyId)).thenReturn(Optional.of(company));
-            when(eventRepository.save(event)).thenReturn(event);
-
-            // Act - Call the method being tested
-            eventService.removeParticipantFromEvent(eventId, companyId);
-
-            // Assert - Verify the results
-
-            // 1. Check the participant was removed from both collections
-            assertFalse(event.getEventParticipants().contains(participant));
-            assertFalse(company.getEventParticipants().contains(participant));
-
-            // 2. Verify the event was saved with updated participants list
-            // This triggers the orphanRemoval behavior
-            verify(eventRepository).save(event);
-        }
-
-        @Test
-        void eventParticipantId_EqualsAndHashCode_ShouldWorkCorrectly() {
-            // Arrange
-            EventParticipant.EventParticipantId id1 = new EventParticipant.EventParticipantId(1L, 1L);
-            EventParticipant.EventParticipantId id2 = new EventParticipant.EventParticipantId(1L, 1L);
-            EventParticipant.EventParticipantId id3 = new EventParticipant.EventParticipantId(2L, 1L);
-
-            // Assert
-            assertEquals(id1, id2);
-            assertNotEquals(id1, id3);
-            assertEquals(id1.hashCode(), id2.hashCode());
-            assertNotEquals(id1.hashCode(), id3.hashCode());
-        }
-
-        @Test
-        void findEventParticipant_ByCompositeId_ShouldReturnEntity() {
-            // Arrange
-            Long eventId = 1L;
-            Long companyId = 1L;
-            EventParticipant.EventParticipantId id = new EventParticipant.EventParticipantId(eventId, companyId);
-            EventParticipant participant = new EventParticipant();
-            participant.setId(id);
-
-            when(eventParticipantRepository.findById(id)).thenReturn(Optional.of(participant));
-
-            // Act
-            Optional<EventParticipant> result = eventParticipantRepository.findById(id);
-
-            // Assert
-            assertTrue(result.isPresent());
-            assertEquals(id, result.get().getId());
-        }
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> eventService.createEvent(invalidEvent));
     }
 }
