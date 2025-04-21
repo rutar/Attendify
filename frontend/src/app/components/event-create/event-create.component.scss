@@ -1,0 +1,133 @@
+body {
+  font-family: 'Open Sans', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.event-create-wrapper {
+  background-color: #eef4f3;
+  color: #222;
+  align-items: center;
+  width: 1230px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 543px;
+
+  .form-shell {
+    background-color: white;
+    max-width: 1230px;
+    margin:  0;
+    padding: 0 390px 0 340px;
+    border-radius: 0;
+
+    .form-title {
+      font-size: 25px;
+      font-family: 'Open Sans', sans-serif;
+      color: #005aa1;
+      margin-bottom: 40px;
+      padding-top: 30px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+
+      label {
+        width: 130px;
+        font-weight: 500;
+        font-size: 17px;
+        font-family: 'Open Sans', sans-serif;
+        margin-top: 6px;
+        letter-spacing: -1px;
+      }
+
+      input,
+      textarea{
+        flex: 1;
+        //padding: 10px;
+        font-size: 17px;
+        border: 1px solid #565656;
+        border-radius: 3px;
+        background-color: #ffffff;
+
+        &:focus {
+          border-color: #007bff;
+          background-color: #fff;
+          outline: none;
+        }
+      }
+
+      textarea {
+        resize: none;
+        min-height: 64px;
+      }
+
+      &.stacked {
+        flex-direction: column;
+
+        label {
+          margin-bottom: 8px;
+        }
+
+        textarea {
+          width: 100%;
+        }
+      }
+    }
+
+    .error-msg {
+      font-size: 13px;
+      color: #c00;
+      margin-left: 160px;
+      margin-top: -5px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-left: 0;
+      margin-top: 20px;
+      padding-bottom: 100px;
+
+      .btn-grey,
+      .btn-blue {
+        padding: 2px ;
+        width: 70px;
+        border: none;
+        border-radius: 3px;
+        font-size: 16px;
+        font-family: 'Open Sans', sans-serif;
+        text-decoration: none;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .btn-grey {
+        background-color: #ccc;
+        color: #000;
+
+        &:hover {
+          background-color: #bbb;
+        }
+      }
+
+      .btn-blue {
+        background-color: #005aa1;
+        color: white;
+
+        &:hover {
+          background-color: #005aa1;
+        }
+      }
+    }
+  }
+}
