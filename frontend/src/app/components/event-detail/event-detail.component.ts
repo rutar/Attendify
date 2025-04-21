@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormControl } from '@angular/forms';
 
 
-import { Observable, Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { ParticipantService } from '../../services/participant.service';
 import { EventData } from '../../models/event.model';
