@@ -1,10 +1,12 @@
 <app-header></app-header>
 
-<app-hero *ngIf="showHero()"></app-hero>
+<app-park-banner *ngIf="showEvents()"></app-park-banner>
 
-<app-page-banner *ngIf="showAddEvent()" text="Ürituse lisamine"></app-page-banner>
+<app-grass-banner *ngIf="showAddEvent()" text="Ürituse lisamine"></app-grass-banner>
 
-<app-page-banner *ngIf="showParticipants()" text="Osavõtjad"></app-page-banner>
+<app-grass-banner *ngIf="showParticipants()" text="Osavõtjad"></app-grass-banner>
+
+<app-grass-banner *ngIf="showParticipant()" text="Osavõtja info"></app-grass-banner>
 
 <router-outlet></router-outlet>
 

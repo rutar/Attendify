@@ -1,5 +1,5 @@
 @import "bootstrap/dist/css/bootstrap.min.css";
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;700&display=swap');
 
 html, body { height: 100%; }
 body {
@@ -7,7 +7,7 @@ body {
   background-color: #eff2f4; /* Set background color to match design */
 }
 
-app-page-banner {
+app-grass-banner {
   display: block;
   margin: 0;
   padding: 0;
