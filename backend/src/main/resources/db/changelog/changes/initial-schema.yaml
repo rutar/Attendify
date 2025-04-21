@@ -1,12 +1,8 @@
 databaseChangeLog:
   - changeSet:
       id: 001-create-events-table
-      author: SA
+      author: yourname
       changes:
-        - createSequence:
-            sequenceName: events_id_seq
-            startValue: 1
-            incrementBy: 1
         - createTable:
             tableName: events
             columns:
@@ -51,13 +47,20 @@ databaseChangeLog:
                   constraints:
                     nullable: false
 
+        - addAutoIncrement:
+            tableName: events
+            columnName: id
+            columnDataType: bigint
+            incrementBy: 1
+            startWith: 99
+
   - changeSet:
       id: 002-create-participants-table
       author: SA
       changes:
         - createSequence:
             sequenceName: participants_id_seq
-            startValue: 1
+            startValue: 99
             incrementBy: 1
         - createTable:
             tableName: participants
@@ -65,6 +68,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: bigint
+                  defaultValueComputed: nextval('participants_id_seq')
                   constraints:
                     primaryKey: true
                     nullable: false

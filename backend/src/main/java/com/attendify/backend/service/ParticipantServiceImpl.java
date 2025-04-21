@@ -5,10 +5,10 @@ import com.attendify.backend.domain.Participant;
 import com.attendify.backend.domain.Person;
 import com.attendify.backend.exception.DuplicateResourceException;
 import com.attendify.backend.exception.ResourceNotFoundException;
-import com.attendify.backend.repository.CompanyRepository;
 import com.attendify.backend.repository.ParticipantRepository;
-import com.attendify.backend.repository.PersonRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +18,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ParticipantServiceImpl implements ParticipantService {
     private final ParticipantRepository participantRepository;
-    private final PersonRepository personRepository;
-    private final CompanyRepository companyRepository;
 
     @Override
-    public List<Participant> getAllParticipants() {
-        return participantRepository.findAll();
+    public Page<Participant> getAllParticipants(Pageable pageable) {
+        return participantRepository.findAll(pageable);
     }
 
     @Override
@@ -34,62 +32,62 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     @Override
     @Transactional
-    public Person createPerson(Person person) {
-        validateEstonianPersonalCode(person.getPersonalCode());
-        if (personRepository.existsByPersonalCode(person.getPersonalCode())) {
-            throw new DuplicateResourceException("Person with this personal code already exists");
+    public Participant createParticipant(Participant participant) {
+        if (participant instanceof Person person) {
+            validateEstonianPersonalCode(person.getPersonalCode());
+            if (participantRepository.existsByPersonalCode(person.getPersonalCode())) {
+                throw new DuplicateResourceException("Person with this personal code already exists");
+            }
+        } else if (participant instanceof Company company) {
+            validateRegistrationCode(company.getRegistrationCode());
+            if (participantRepository.existsByRegistrationCode(company.getRegistrationCode())) {
+                throw new DuplicateResourceException("Company with this registration code already exists");
+            }
+            if (company.getParticipantCount() == null || company.getParticipantCount() < 1) {
+                company.setParticipantCount(1);
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown participant type: " + participant.getClass().getName());
         }
-        return personRepository.save(person);
+        return participantRepository.save(participant);
     }
 
     @Override
     @Transactional
-    public Company createCompany(Company company) {
-        if (companyRepository.existsByRegistrationCode(company.getRegistrationCode())) {
-            throw new DuplicateResourceException("Company with this registration code already exists");
-        }
-        if (company.getParticipantCount() == null || company.getParticipantCount() < 1) {
-            company.setParticipantCount(1);
-        }
-        return companyRepository.save(company);
-    }
-
-    @Override
-    @Transactional
-    public Person updatePerson(Long id, Person personDetails) {
+    public Participant updateParticipant(Long id, Participant participantDetails) {
         Participant participant = getParticipantById(id);
-        if (!(participant instanceof Person person)) {
-            throw new IllegalArgumentException("Participant with id " + id + " is not a Person");
-        }
-        if (!person.getPersonalCode().equals(personDetails.getPersonalCode()) &&
-                personRepository.existsByPersonalCode(personDetails.getPersonalCode())) {
-            throw new DuplicateResourceException("Person with this personal code already exists");
-        }
-        person.setFirstName(personDetails.getFirstName());
-        person.setLastName(personDetails.getLastName());
-        person.setPersonalCode(personDetails.getPersonalCode());
-        person.setPaymentMethod(personDetails.getPaymentMethod());
-        person.setAdditionalInfo(personDetails.getAdditionalInfo());
-        return personRepository.save(person);
-    }
 
-    @Override
-    @Transactional
-    public Company updateCompany(Long id, Company companyDetails) {
-        Participant participant = getParticipantById(id);
-        if (!(participant instanceof Company company)) {
-            throw new IllegalArgumentException("Participant with id " + id + " is not a Company");
+        // Проверяем, что тип участника совпадает
+        if (participant.getClass() != participantDetails.getClass()) {
+            throw new IllegalArgumentException("Participant type mismatch: cannot update " + participant.getClass().getSimpleName() +
+                    " with " + participantDetails.getClass().getSimpleName());
         }
-        if (!company.getRegistrationCode().equals(companyDetails.getRegistrationCode()) &&
-                companyRepository.existsByRegistrationCode(companyDetails.getRegistrationCode())) {
-            throw new DuplicateResourceException("Company with this registration code already exists");
+
+        // Обновляем общие поля
+        participant.setPaymentMethod(participantDetails.getPaymentMethod());
+        participant.setAdditionalInfo(participantDetails.getAdditionalInfo());
+
+        // Обновляем специфичные поля и проверяем уникальность
+        if (participant instanceof Person person && participantDetails instanceof Person personDetails) {
+            if (!person.getPersonalCode().equals(personDetails.getPersonalCode()) &&
+                    participantRepository.existsByPersonalCode(personDetails.getPersonalCode())) {
+                throw new DuplicateResourceException("Person with this personal code already exists");
+            }
+            person.setFirstName(personDetails.getFirstName());
+            person.setLastName(personDetails.getLastName());
+            person.setPersonalCode(personDetails.getPersonalCode());
+        } else if (participant instanceof Company company && participantDetails instanceof Company companyDetails) {
+            if (!company.getRegistrationCode().equals(companyDetails.getRegistrationCode()) &&
+                    participantRepository.existsByRegistrationCode(companyDetails.getRegistrationCode())) {
+                throw new DuplicateResourceException("Company with this registration code already exists");
+            }
+            company.setCompanyName(companyDetails.getCompanyName());
+            company.setRegistrationCode(companyDetails.getRegistrationCode());
+            company.setParticipantCount(companyDetails.getParticipantCount());
+            company.setContactPerson(companyDetails.getContactPerson());
         }
-        company.setCompanyName(companyDetails.getCompanyName());
-        company.setRegistrationCode(companyDetails.getRegistrationCode());
-        company.setParticipantCount(companyDetails.getParticipantCount());
-        company.setPaymentMethod(companyDetails.getPaymentMethod());
-        company.setAdditionalInfo(companyDetails.getAdditionalInfo());
-        return companyRepository.save(company);
+
+        return participantRepository.save(participant);
     }
 
     @Override
@@ -98,6 +96,12 @@ public class ParticipantServiceImpl implements ParticipantService {
         Participant participant = getParticipantById(id);
         participantRepository.delete(participant);
     }
+
+    @Override
+    public Page<Participant> searchParticipants(String query, Pageable pageable) {
+        return participantRepository.searchParticipants(query, pageable);
+    }
+
 
     void validateEstonianPersonalCode(String personalCode) {
         // Validation of Estonian personal code
@@ -126,6 +130,12 @@ public class ParticipantServiceImpl implements ParticipantService {
         int expectedChecksum = Character.getNumericValue(personalCode.charAt(10));
         if (checksum != expectedChecksum) {
             throw new IllegalArgumentException("Invalid Estonian personal code checksum");
+        }
+    }
+
+     void validateRegistrationCode(String registrationCode) {
+        if (!registrationCode.matches("^\\d{8}$")) {
+            throw new IllegalArgumentException("Invalid registration code format: must be 8 digits");
         }
     }
 }

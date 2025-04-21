@@ -8,24 +8,26 @@ import org.springframework.stereotype.Component;
 public class EventMapper {
 
     public EventDTO toDto(Event event) {
-        EventDTO dto = new EventDTO();
-        dto.setId(event.getId());
-        dto.setName(event.getName());
-        dto.setDateTime(event.getDateTime());
-        dto.setLocation(event.getLocation());
-        dto.setStatus(event.getStatus());
-        dto.setAdditionalInfo(event.getAdditionalInfo());
-        return dto;
+        EventDTO eventDTO = new EventDTO();
+        eventDTO.setId(event.getId());
+        eventDTO.setName(event.getName());
+        eventDTO.setDateTime(event.getDateTime());
+        eventDTO.setLocation(event.getLocation());
+        eventDTO.setStatus(event.getStatus());
+        eventDTO.setAdditionalInfo(event.getAdditionalInfo());
+        eventDTO.setCreatedAt(event.getCreatedAt());
+        eventDTO.setUpdatedAt(event.getUpdatedAt());
+        return eventDTO;
     }
 
-    public Event toEntity(EventDTO dto) {
+    public Event toEntity(EventDTO eventDTO) {
         Event event = new Event();
-        event.setId(dto.getId());
-        event.setName(dto.getName());
-        event.setDateTime(dto.getDateTime());
-        event.setLocation(dto.getLocation());
-        event.setStatus(dto.getStatus());
-        event.setAdditionalInfo(dto.getAdditionalInfo());
+        event.setId(eventDTO.getId());
+        event.setName(eventDTO.getName());
+        event.setDateTime(eventDTO.getDateTime());
+        event.setLocation(eventDTO.getLocation());
+        event.setStatus(eventDTO.getStatus());
+        event.setAdditionalInfo(eventDTO.getAdditionalInfo());
         return event;
     }
 }

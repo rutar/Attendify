@@ -1,17 +1,17 @@
 package com.attendify.backend.service;
 
-import com.attendify.backend.domain.Company;
 import com.attendify.backend.domain.Participant;
-import com.attendify.backend.domain.Person;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface ParticipantService {
-    List<Participant> getAllParticipants();
+    Page<Participant> getAllParticipants(Pageable pageable);
     Participant getParticipantById(Long id);
-    Person createPerson(Person person);
-    Company createCompany(Company company);
-    Person updatePerson(Long id, Person personDetails);
-    Company updateCompany(Long id, Company companyDetails);
+    Participant createParticipant(Participant participant);
+    Participant updateParticipant(Long id, Participant participantDetails);
     void deleteParticipant(Long id);
+
+    Page<Participant> searchParticipants(String query, Pageable pageable);
 }

@@ -8,8 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "participants")
@@ -19,12 +17,8 @@ import java.util.List;
 @NoArgsConstructor
 public abstract class Participant {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "participant_seq")
-    @SequenceGenerator(name = "participant_seq", sequenceName = "participants_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EventParticipant> eventParticipants = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = 20)
@@ -43,10 +37,4 @@ public abstract class Participant {
     private Instant updatedAt;
 
     public enum PaymentMethod {BANK_TRANSFER, CASH, CARD}
-
-    public List<Event> getEvents() {
-        return eventParticipants.stream()
-                .map(EventParticipant::getEvent)
-                .toList();
-    }
 }

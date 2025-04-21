@@ -1,7 +1,7 @@
 package com.attendify.backend.service;
 
 import com.attendify.backend.domain.Event;
-import com.attendify.backend.domain.EventParticipant;
+import com.attendify.backend.dto.ParticipantDTO;
 
 import java.util.List;
 
@@ -12,8 +12,4 @@ public interface EventService {
     Event createEvent(Event event);
     Event updateEvent(Event event);
     void deleteEvent(Long id);
-
-    EventParticipant addParticipantToEvent(Long eventId, Long participantId, EventParticipant.AttendanceStatus status);
-    EventParticipant updateParticipantStatus(Long eventId, Long participantId, EventParticipant.AttendanceStatus status);
-    void removeParticipantFromEvent(Long eventId, Long participantId);
 }
