@@ -1,8 +1,8 @@
-.hero {
-  margin-bottom: 0px;
+.park-banner {
+  margin-bottom: 0;
 }
 
-.hero-container {
+.park-banner-container {
   display: flex;
   width: 1180px;
   margin: 0 auto;
@@ -10,7 +10,7 @@
   box-shadow: none;
 }
 
-.hero-text {
+.park-banner-text {
   width: 590px; /* Exactly half of 1180px */
   background-color: #005aa2;
   color: #ffffff;
@@ -22,7 +22,7 @@
   box-shadow: none;
 }
 
-.hero-text p {
+.park-banner-text p {
   font-family: 'Arial', sans-serif;
   font-size: 18px;
   line-height: 1.5;
@@ -30,17 +30,17 @@
   text-align: center;
 }
 
-.hero-text p strong {
+.park-banner-text p strong {
   font-weight: 700;
 }
 
-.hero-image {
+.park-banner-image {
   width: 590px; /* Exactly half of 1180px */
   box-sizing: border-box;
   box-shadow: none;
 }
 
-.hero-image img {
+.park-banner-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -48,49 +48,49 @@
 }
 
 @media (max-width: 1200px) {
-  .hero-container {
+  .park-banner-container {
     width: 100%;
     max-width: 1180px;
     padding: 0 16px;
     box-sizing: border-box; /* Ensure padding is included in container width */
   }
 
-  .hero-text,
-  .hero-image {
+  .park-banner-text,
+  .park-banner-image {
     width: 50%; /* Switch to percentage for responsiveness */
   }
 }
 
 @media (max-width: 768px) {
-  .hero-container {
+  .park-banner-container {
     flex-direction: column;
     padding: 0;
   }
 
-  .hero-text,
-  .hero-image {
+  .park-banner-text,
+  .park-banner-image {
     width: 100%; /* Full width on mobile */
   }
 
-  .hero-text {
+  .park-banner-text {
     padding: 24px;
   }
 
-  .hero-image img {
+  .park-banner-image img {
     height: 300px;
   }
 }
 
 @media (max-width: 480px) {
-  .hero-text {
+  .park-banner-text {
     padding: 16px;
   }
 
-  .hero-text p {
+  .park-banner-text p {
     font-size: 16px;
   }
 
-  .hero-image img {
+  .park-banner-image img {
     height: 200px;
   }
 }
