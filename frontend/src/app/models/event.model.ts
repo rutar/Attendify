@@ -1,11 +1,11 @@
-import { Participant } from './participantbase.model';
 
-export interface Event {
-  id: number;
+export interface EventData {
+  id?: number;
   name: string;
   dateTime: string;
-  isPast: boolean;
   location?: string;
+  status: string;
   additionalInfo?: string;
-  participantCount?: Participant[];
+  createdAt?: string;
+  updatedAt?: string;
 }
