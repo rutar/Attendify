@@ -1,4 +1,11 @@
 <app-header></app-header>
-<app-hero></app-hero>
+
+<app-hero *ngIf="showHero()"></app-hero>
+
+<app-page-banner *ngIf="showAddEvent()" text="Ürituse lisamine"></app-page-banner>
+
+<app-page-banner *ngIf="showParticipants()" text="Osavõtjad"></app-page-banner>
+
 <router-outlet></router-outlet>
+
 <app-footer></app-footer>
