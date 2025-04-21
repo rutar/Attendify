@@ -1,0 +1,35 @@
+
+.top-bar {
+  display: flex;
+  width: 1180px;
+  height: 80px;
+  margin: 0 auto; // 💡 centers the banner horizontally
+  padding: 0;     // ensures no internal spacing
+  border: none;   // just in case any default border sneaks in
+  box-sizing: border-box;
+
+  .title-bar {
+    background-color: #0063a6;
+    width: 25%;
+    display: flex;
+    align-items: center;
+    justify-content: center; // ✅ centers text horizontally
+    padding: 0;
+
+    .title-text {
+      font-family: 'Open Sans', sans-serif;
+      color: white;
+      font-size: 35px;
+      font-weight: 300;
+      margin: 0;
+    }
+  }
+
+  .banner-image {
+    width: 75%;
+    background-image: url('/libled.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 100%; // ✅ match banner height exactly
+  }
+}
