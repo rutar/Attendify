@@ -1,63 +1,78 @@
-import {Component, OnInit, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {ActivatedRoute, RouterModule} from '@angular/router';
-import {FormsModule} from '@angular/forms';
-import {EventService} from '../../services/event.service';
-import {ParticipantService} from '../../services/participant.service';
-import {Event} from '../../models/event.model';
-import {Participant, ParticipantStatus} from '../../models/participantbase.model';
-import {Person} from '../../models/person.model';
-import {Company} from '../../models/company.model';
+import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, RouterModule } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormControl } from '@angular/forms';
+
+
+import { Observable, Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { EventService } from '../../services/event.service';
+import { ParticipantService } from '../../services/participant.service';
+import { EventData } from '../../models/event.model';
+import { Participant } from '../../models/participant.model';
+
+
+interface ErrorMessages {
+  event_load_failed: string;
+  participants_load_failed: string;
+  participant_add_failed: string;
+  participant_remove_failed: string;
+  invalid_person_data: string;
+  invalid_company_data: string;
+  search_failed: string;
+}
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatAutocompleteModule,
+    MatFormFieldModule,
+    MatInputModule
+  ],
   templateUrl: './event-detail.component.html',
   styleUrls: ['./event-detail.component.scss'],
 })
 export class EventDetailComponent implements OnInit {
-  // Ürituse andmed
-  event = signal<Event | null>(null);
-  // Ürituse osalejate nimekiri
+  event = signal<EventData | null>(null);
   participants = signal<Participant[]>([]);
-  // Kõik osalejad süsteemis
   allParticipants = signal<Participant[]>([]);
-  // Laadimise olek
   isLoading = signal<boolean>(true);
-  // Vea teade
   error = signal<string | null>(null);
-  // Valitud osaleja ID olemasoleva osaleja lisamiseks
-  selectedParticipantId = signal<number | null>(null);
-  // Osaleja staatuse vaikimisi väärtus
-  participantStatus = signal<string>('confirmed');
-  // Uue osaleja tüüp (füüsiline või juriidiline isik)
   newParticipantType = signal<'PERSON' | 'COMPANY' | null>(null);
-  // Uue füüsilise isiku andmed
-  newPerson = signal<Partial<Person>>({
-    type: 'PERSON',
+  newParticipant = signal<Participant>({
+    type: null,
     firstName: '',
     lastName: '',
     personalCode: '',
-    paymentMethod: '',
-    status: ParticipantStatus.CONFIRMED, // Lisame vaikimisi staatuse
-    email: '',
-    phone: '',
-    additionalInfo: '',
-  });
-  // Uue ettevõtte andmed
-  newCompany = signal<Partial<Company>>({
-    type: 'COMPANY',
     companyName: '',
     registrationCode: '',
-    paymentMethod: '',
-    status: ParticipantStatus.CONFIRMED, // Lisame vaikimisi staatuse
     participantCount: undefined,
     contactPerson: '',
+    paymentMethod: null,
     email: '',
     phone: '',
-    additionalInfo: '',
+    additionalInfo: ''
   });
+  searchControl = new FormControl('');
+  private searchTerms = new Subject<string>();
+
+  private errorMessages: ErrorMessages = {
+    event_load_failed: 'Ürituse andmete laadimine ebaõnnestus',
+    participants_load_failed: 'Osalejate nimekirja laadimine ebaõnnestus',
+    participant_add_failed: 'Osaleja lisamine ebaõnnestus',
+    participant_remove_failed: 'Osaleja eemaldamine ebaõnnestus',
+    invalid_person_data: 'Eesnimi, perekonnanimi, isikukood ja makseviis on kohustuslikud',
+    invalid_company_data: 'Ettevõtte nimi, registrikood ja makseviis on kohustuslikud',
+    search_failed: 'Osalejate otsimine ebaõnnestus'
+  };
 
   constructor(
     private eventService: EventService,
@@ -65,18 +80,10 @@ export class EventDetailComponent implements OnInit {
     private route: ActivatedRoute
   ) {}
 
-  // Komponendi initsialiseerimine
   ngOnInit(): void {
-    // Laeme kõik osalejad
-    this.participantService.fetchParticipants();
-    // Võtame osalejate signaali väärtuse ja uuendame allParticipants
-    this.allParticipants.set(this.participantService.getParticipants()());
-
-    // Võtame URL-ist ürituse ID
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       const eventId = +id;
-      // Laeme ürituse andmed
       this.eventService.getEvent(eventId).subscribe({
         next: (event) => {
           this.event.set(event);
@@ -84,152 +91,149 @@ export class EventDetailComponent implements OnInit {
           this.loadParticipants(eventId);
         },
         error: () => {
-          this.error.set('Ürituse andmete laadimine ebaõnnestus');
+          this.error.set(this.errorMessages.event_load_failed);
           this.isLoading.set(false);
-        },
+        }
       });
     }
+
+    // Set up search pipeline
+    this.searchTerms
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((term: string) => this.participantService.searchParticipants(term))
+      )
+      .subscribe({
+        next: (participants) => {
+          this.allParticipants.set(
+            participants.filter((p) => !this.participants().some((ep) => ep.id === p.id))
+          );
+        },
+        error: () => this.error.set(this.errorMessages.search_failed)
+      });
   }
 
-  // Laeb ürituse osalejad
+  searchParticipants(term: string): void {
+    this.searchTerms.next(term);
+  }
+
   loadParticipants(eventId: number): void {
     this.eventService.getEventParticipants(eventId).subscribe({
       next: (participants) => this.participants.set(participants),
-      error: () => this.error.set('Osalejate nimekirja laadimine ebaõnnestus'),
+      error: () => this.error.set(this.errorMessages.participants_load_failed)
     });
   }
 
-  // Lisab olemasoleva osaleja üritusele
-  addExistingParticipant(): void {
+  addExistingParticipant(event: MatAutocompleteSelectedEvent): void {
+    const participant: Participant = event.option.value;
     const eventId = this.event()?.id;
-    const participantId = this.selectedParticipantId();
-    if (eventId && participantId) {
-      this.eventService
-        .addParticipantToEvent(eventId, participantId, this.participantStatus())
-        .subscribe({
-          next: (participant) => {
-            this.participants.update((parts) => [...parts, participant]);
-            this.selectedParticipantId.set(null);
-            this.participantStatus.set('confirmed');
-          },
-          error: () => this.error.set('Osaleja lisamine ebaõnnestus'),
-        });
-    }
+    if (!eventId || !participant.id) return;
+
+    this.eventService.addParticipantToEvent(eventId, { id: participant.id, type: null }).subscribe({
+      next: (addedParticipant) => {
+        this.participants.update((parts) => [...parts, addedParticipant]);
+        this.allParticipants.update((parts) => parts.filter((p) => p.id !== addedParticipant.id));
+        this.searchControl.setValue('');
+      },
+      error: (err) => this.error.set(err.message || this.errorMessages.participant_add_failed)
+    });
   }
 
-  // Loob uue osaleja ja lisab selle üritusele
   createNewParticipant(): void {
     const eventId = this.event()?.id;
-    if (!eventId || !this.newParticipantType()) return;
-
-    if (this.newParticipantType() === 'PERSON') {
-      const person = this.newPerson();
-      // Kontrollime kohustuslikke välju
-      if (!person.firstName || !person.lastName || !person.personalCode || !person.paymentMethod) {
-        this.error.set('Eesnimi, perekonnanimi, isikukood ja makseviis on kohustuslikud');
-        return;
-      }
-      this.participantService.createPerson(person as Person).subscribe({
-        next: (newPerson) => {
-          this.eventService
-            .addParticipantToEvent(eventId, newPerson.id, this.participantStatus())
-            .subscribe({
-              next: (participant) => {
-                this.participants.update((parts) => [...parts, participant]);
-                this.resetNewParticipantForm();
-              },
-              error: () => this.error.set('Osaleja lisamine üritusele ebaõnnestus'),
-            });
-        },
-        error: () => this.error.set('Füüsilise isiku loomine ebaõnnestus'),
-      });
-    } else {
-      const company = this.newCompany();
-      // Kontrollime kohustuslikke välju
-      if (!company.companyName || !company.registrationCode || !company.paymentMethod) {
-        this.error.set('Ettevõtte nimi, registrikood ja makseviis on kohustuslikud');
-        return;
-      }
-      this.participantService.createCompany(company as Company).subscribe({
-        next: (newCompany) => {
-          this.eventService
-            .addParticipantToEvent(eventId, newCompany.id, this.participantStatus())
-            .subscribe({
-              next: (participant) => {
-                this.participants.update((parts) => [...parts, participant]);
-                this.resetNewParticipantForm();
-              },
-              error: () => this.error.set('Osaleja lisamine üritusele ebaõnnestus'),
-            });
-        },
-        error: () => this.error.set('Ettevõtte loomine ebaõnnestus'),
-      });
+    const participant = this.newParticipant();
+    if (!eventId || !this.isNewParticipantValid()) {
+      this.error.set(
+        participant.type === 'PERSON'
+          ? this.errorMessages.invalid_person_data
+          : this.errorMessages.invalid_company_data
+      );
+      return;
     }
+
+    this.eventService.addParticipantToEvent(eventId, participant).subscribe({
+      next: (addedParticipant) => {
+        this.participants.update((parts) => [...parts, addedParticipant]);
+        this.resetNewParticipantForm();
+      },
+      error: (err) => this.error.set(err.message || this.errorMessages.participant_add_failed)
+    });
   }
 
-  // Uuendab osaleja staatust
-  updateParticipantStatus(participantId: number, status: string): void {
-    const eventId = this.event()?.id;
-    if (eventId) {
-      this.eventService.updateParticipantStatus(eventId, participantId, status).subscribe({
-        next: (updatedParticipant) => {
-          this.participants.update((parts) =>
-            parts.map((p) => (p.id === participantId ? updatedParticipant : p))
-          );
-        },
-        error: () => this.error.set('Osaleja staatuse uuendamine ebaõnnestus'),
-      });
-    }
-  }
-
-  // Eemaldab osaleja ürituselt
   removeParticipant(participantId: number): void {
     const eventId = this.event()?.id;
-    if (eventId) {
-      this.eventService.removeParticipantFromEvent(eventId, participantId).subscribe({
-        next: () => {
-          this.participants.update((parts) => parts.filter((p) => p.id !== participantId));
-        },
-        error: () => this.error.set('Osaleja eemaldamine ebaõnnestus'),
-      });
-    }
+    if (!eventId) return;
+
+    this.eventService.removeParticipantFromEvent(eventId, participantId).subscribe({
+      next: () => {
+        this.participants.update((parts) => parts.filter((p) => p.id !== participantId));
+      },
+      error: () => this.error.set(this.errorMessages.participant_remove_failed)
+    });
   }
 
-  // Tagastab osaleja nime vastavalt tüübile
   getParticipantName(participant: Participant): string {
     if (participant.type === 'PERSON') {
-      const person = participant as Person;
-      return `${person.firstName} ${person.lastName}`;
+      return `${participant.firstName || ''} ${participant.lastName || ''}`.trim() || 'Nimetu isik';
     }
-    return (participant as Company).companyName;
+    if (participant.type === 'COMPANY') {
+      return participant.companyName || 'Nimetu ettevõte';
+    }
+    return participant.additionalInfo || 'Tundmatu osaleja';
   }
 
-  // Lähtestab uue osaleja vormi
+  isNewParticipantValid(): boolean {
+    const p = this.newParticipant();
+    if (p.type === 'PERSON') {
+      return !!(
+        p.firstName?.trim() &&
+        p.lastName?.trim() &&
+        p.personalCode?.trim() &&
+        p.paymentMethod
+      );
+    }
+    if (p.type === 'COMPANY') {
+      return !!(
+        p.companyName?.trim() &&
+        p.registrationCode?.trim() &&
+        p.paymentMethod
+      );
+    }
+    return false;
+  }
+
   resetNewParticipantForm(): void {
     this.newParticipantType.set(null);
-    this.newPerson.set({
-      type: 'PERSON',
+    this.newParticipant.set({
+      type: null,
       firstName: '',
       lastName: '',
       personalCode: '',
-      paymentMethod: '',
-      status: ParticipantStatus.CONFIRMED,
-      email: '',
-      phone: '',
-      additionalInfo: '',
-    });
-    this.newCompany.set({
-      type: 'COMPANY',
       companyName: '',
       registrationCode: '',
-      paymentMethod: '',
-      status: ParticipantStatus.CONFIRMED,
       participantCount: undefined,
       contactPerson: '',
+      paymentMethod: null,
       email: '',
       phone: '',
-      additionalInfo: '',
+      additionalInfo: ''
     });
-    this.participantStatus.set('confirmed');
   }
+
+  onSearchInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchParticipants(input.value);
+  }
+
+  onParticipantTypeChange(type: 'PERSON' | 'COMPANY' | null): void {
+    this.newParticipantType.set(type);
+    this.newParticipant.update((p) => ({ ...p, type }));
+  }
+
+  trackById(index: number, participant: Participant): number {
+    return participant.id!;
+  }
+
+  protected readonly HTMLInputElement = HTMLInputElement;
 }

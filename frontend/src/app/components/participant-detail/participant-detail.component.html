@@ -1,58 +1,12 @@
 <div class="container mt-4">
   <div class="card">
     <div class="card-header">
-      <h2>Osavõtjad</h2>
+      <h2>{{ isEditMode() ? 'Muuda osavõtjat' : 'Lisa osavõtja' }}</h2>
     </div>
     <div class="card-body">
-      <!-- Ürituse info -->
-      <section *ngIf="event()" class="event-info mb-4">
-        <p><strong>Ürituse nimi:</strong> {{ event()!.name }}</p>
-        <p><strong>Toimumisaeg:</strong> {{ event()!.dateTime | date:'medium' }}</p>
-        <p><strong>Koht:</strong> {{ event()!.location || 'Määramata' }}</p>
-      </section>
+      <form [formGroup]="participantForm" (ngSubmit)="onSubmit()">
+        <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
 
-      <!-- Vea teade -->
-      <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
-
-      <!-- Osavõtjate nimekiri -->
-      <section class="participants-list mb-4">
-        <h3>Osavõtjad</h3>
-        <table class="table table-striped">
-          <thead>
-          <tr>
-            <th>Nr</th>
-            <th>Nimi</th>
-            <th>Kood</th>
-            <th>Maksmisviis</th>
-            <th>Tegevused</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let p of participants(); let i = index; trackBy: trackById">
-            <td>{{ i + 1 }}</td>
-            <td>
-              <ng-container *ngIf="p.type === 'PERSON'">{{ p.firstName }} {{ p.lastName }}</ng-container>
-              <ng-container *ngIf="p.type === 'COMPANY'">{{ p.companyName }}</ng-container>
-            </td>
-            <td>{{ p.type === 'PERSON' ? p.personalCode : p.registrationCode }}</td>
-            <td>
-              {{ p.paymentMethod === 'CASH' ? 'Sularaha' : p.paymentMethod === 'CARD' ? 'Kaart' : 'Ülekanne' }}
-            </td>
-            <td>
-              <a routerLink="/participants/{{ p.id }}" class="btn btn-sm btn-outline-primary">Vaata/Muuda</a>
-              <button (click)="deleteParticipant(p)" class="btn btn-sm btn-outline-danger">Kustuta</button>
-            </td>
-          </tr>
-          <tr *ngIf="!participants().length">
-            <td colspan="5" class="text-center">Osavõtjaid pole</td>
-          </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <!-- Osavõtja lisamise vorm -->
-      <h3>Osavõtjate lisamine</h3>
-      <form [formGroup]="participantForm" (ngSubmit)="addParticipant()">
         <div class="mb-3">
           <label class="form-label">Osavõtja tüüp</label>
           <div class="form-check form-check-inline">
@@ -63,7 +17,7 @@
               value="PERSON"
               id="personType"
             />
-            <label class="form-check-label" for="personType">Eraisik</label>
+            <label class="form-check-label" for="personType">Füüsiline isik</label>
           </div>
           <div class="form-check form-check-inline">
             <input
@@ -73,12 +27,11 @@
               value="COMPANY"
               id="companyType"
             />
-            <label class="form-check-label" for="companyType">Ettevõte</label>
+            <label class="form-check-label" for="companyType">Juriidiline isik</label>
           </div>
         </div>
 
-        <!-- Eraisiku väljad -->
-        <div *ngIf="selectedType() === 'PERSON'" class="mb-3">
+        <div *ngIf="participantForm.get('type')?.value === 'PERSON'" class="mb-3">
           <div class="mb-3">
             <label for="firstName" class="form-label">Eesnimi</label>
             <input
@@ -90,14 +43,14 @@
             <div class="invalid-feedback">Eesnimi on kohustuslik</div>
           </div>
           <div class="mb-3">
-            <label for="lastName" class="form-label">Perenimi</label>
+            <label for="lastName" class="form-label">Perekonnanimi</label>
             <input
               id="lastName"
               formControlName="lastName"
               class="form-control"
               [class.is-invalid]="participantForm.get('lastName')?.invalid && participantForm.get('lastName')?.touched"
             />
-            <div class="invalid-feedback">Perenimi on kohustuslik</div>
+            <div class="invalid-feedback">Perekonnanimi on kohustuslik</div>
           </div>
           <div class="mb-3">
             <label for="personalCode" class="form-label">Isikukood</label>
@@ -111,8 +64,7 @@
           </div>
         </div>
 
-        <!-- Ettevõtte väljad -->
-        <div *ngIf="selectedType() === 'COMPANY'" class="mb-3">
+        <div *ngIf="participantForm.get('type')?.value === 'COMPANY'" class="mb-3">
           <div class="mb-3">
             <label for="companyName" class="form-label">Ettevõtte nimi</label>
             <input
@@ -133,32 +85,74 @@
             />
             <div class="invalid-feedback">Registrikood on kohustuslik</div>
           </div>
+          <div class="mb-3">
+            <label for="participantCount" class="form-label">Osalejate arv (valikuline)</label>
+            <input
+              id="participantCount"
+              formControlName="participantCount"
+              type="number"
+              class="form-control"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="contactPerson" class="form-label">Kontaktisik (valikuline)</label>
+            <input
+              id="contactPerson"
+              formControlName="contactPerson"
+              class="form-control"
+            />
+          </div>
         </div>
 
-        <!-- Ühised väljad -->
         <div class="mb-3">
-          <label for="paymentMethod" class="form-label">Maksmisviis</label>
+          <label for="paymentMethod" class="form-label">Makseviis</label>
           <select
             id="paymentMethod"
             formControlName="paymentMethod"
             class="form-select"
             [class.is-invalid]="participantForm.get('paymentMethod')?.invalid && participantForm.get('paymentMethod')?.touched"
           >
-            <option value="CASH">Sularaha</option>
+            <option [ngValue]="null">Vali makseviis</option>
             <option value="CARD">Kaart</option>
-            <option value="BANK_TRANSFER">Ülekanne</option>
+            <option value="BANK_TRANSFER">Pangaülekanne</option>
+            <option value="CASH">Sularaha</option>
           </select>
-          <div class="invalid-feedback">Maksmisviis on kohustuslik</div>
+          <div class="invalid-feedback">Makseviis on kohustuslik</div>
         </div>
 
         <div class="mb-3">
-          <label for="additionalInfo" class="form-label">Lisainfo</label>
-          <textarea id="additionalInfo" formControlName="additionalInfo" class="form-control"></textarea>
+          <label for="email" class="form-label">Email (valikuline)</label>
+          <input
+            id="email"
+            formControlName="email"
+            type="email"
+            class="form-control"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="phone" class="form-label">Telefon (valikuline)</label>
+          <input
+            id="phone"
+            formControlName="phone"
+            class="form-control"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="additionalInfo" class="form-label">Lisainfo (valikuline)</label>
+          <textarea
+            id="additionalInfo"
+            formControlName="additionalInfo"
+            class="form-control"
+          ></textarea>
         </div>
 
         <div class="d-flex justify-content-between">
-          <a routerLink="/events" class="btn btn-outline-secondary">Tagasi</a>
-          <button type="submit" class="btn btn-primary">Salvesta</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="goBack()">Tagasi</button>
+          <button type="submit" class="btn btn-primary" [disabled]="participantForm.invalid">
+            {{ isEditMode() ? 'Salvesta muudatused' : 'Lisa osavõtja' }}
+          </button>
         </div>
       </form>
     </div>

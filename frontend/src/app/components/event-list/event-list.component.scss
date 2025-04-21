@@ -1,50 +1,327 @@
-.events {
+
+
+/* Global font fallback for elements without explicit font-family */
+* {
+  font-family: 'Open Sans', sans-serif;
+}
+
+.event-list-section {
+  margin-bottom: 16px;
+  background-color: #eff2f4;
+  padding-top: 18px;
+}
+
+.event-list-container {
   display: flex;
-  gap: 32px;
-  padding: 24px 32px;
+  width: 1212px;
+  padding: 0 16px;
+  margin: auto;
+  gap: 16px;
+  background-color: #eff2f4;
+  box-shadow: none;
+  box-sizing: border-box;
+}
 
-  .column {
-    flex: 1;
-    background: #fff;
-    padding: 16px;
-    border: 1px solid #ddd;
+.event-card {
+  width: 590px;
+  background-color: #ffffff;
+  padding: 16px;
+  box-shadow: none;
+  box-sizing: border-box;
+}
 
-    h3 {
-      background-color: #005ca5;
-      color: white;
-      padding: 8px;
-      margin: -16px -16px 16px -16px;
-    }
+.event-card:first-child {
+  width: 605px;
+  margin-left: 0;
+}
 
-    ul {
-      list-style: none;
-      padding: 0;
+.event-section-header {
+  background-color: #005aa1;
+  color: #e0e0e0;
+  font-size: 22px;
+  font-weight: 400;
+  font-family: 'Open Sans', sans-serif;
+  height: 68px;
+  padding: 0 12px;
+  margin: -16px -16px 16px -16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 22px;
+}
 
-      li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
+.event-section-header > * {
+  margin: 0;
+}
 
-        span {
-          flex: 1;
-        }
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 8px;
+  margin-bottom: 16px;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  text-align: center;
+  font-family: 'Open Sans', sans-serif;
+}
 
-        button {
-          background: none;
-          border: none;
-          color: red;
-          font-size: 18px;
-          cursor: pointer;
-        }
-      }
-    }
+.event-list {
+  list-style: circle;
+  padding: 0 0 120px 0;
+}
 
-    a {
-      display: block;
-      margin-top: 12px;
-      text-decoration: underline;
-      color: #005ca5;
-    }
+
+.event-title-container {
+  display: flex;
+  align-items: flex-start;
+  width: 310px;
+}
+
+.event-number  {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #707070;
+  //word-break: break-word;
+  margin-right: 2px;
+}
+
+.event-title {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #707070;
+  word-break: break-word;
+  margin: 0;
+}
+
+.event-date {
+  width: 100px;
+  text-align: left;
+  margin-left: 10px;
+  white-space: nowrap;
+  align-items: flex-start;
+  color: #707070;
+  font-size: 14px;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.event-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100px;
+}
+
+.event-actions a.uppercase-link {
+  color: #7e7e7e;
+  font-size: 12px;
+  align-items: flex-start;
+  font-weight: 1000;
+  text-decoration: none;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.event-actions a.uppercase-link:hover {
+  color: #003d73;
+  text-decoration: none;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 12px 0;
+  color: #999;
+  font-style: italic;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.uppercase-link {
+  text-transform: uppercase;
+  align-items: flex-start;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+  color: #707070;
+  text-decoration: none;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.uppercase-link:hover {
+  color: #003d73;
+  text-decoration: none;
+}
+
+.add-event-link {
+  display: inline-block;
+}
+
+/* Style the delete button with remove.svg */
+.event-actions .delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-list li {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.event-actions .delete-button .delete-icon {
+  width: 12px;
+  height: 12px;
+  fill: #999;
+}
+
+.event-actions .delete-button:hover .delete-icon {
+  fill: #990000;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.modal-dialog {
+  background-color: #ffffff;
+  width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  pointer-events: auto;
+  z-index: 1001;
+}
+
+.modal-header {
+  background-color: #005aa1;
+  color: #fff;
+  padding: 12px;
+  text-align: center;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 400;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.modal-body {
+  padding: 16px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #000;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.modal-footer {
+  padding: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.modal-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.cancel-button {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-button:hover {
+  background-color: #d0d0d0;
+}
+
+.confirm-button {
+  background-color: #005aa1;
+  color: #fff;
+}
+
+.confirm-button:hover {
+  background-color: #003d73;
+}
+
+@media (max-width: 1200px) {
+  .event-list-container {
+    width: 100%;
+    max-width: 1180px;
+    padding: 0 16px;
+    gap: 16px;
+  }
+
+  .event-card {
+    width: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .event-list-container {
+    flex-direction: column;
+    padding: 0 16px;
+    gap: 16px;
+  }
+
+  .event-card {
+    width: 100%;
+  }
+
+  .modal-dialog {
+    width: 90%;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .event-list-container {
+    padding: 0 8px;
+  }
+
+  .event-section-header {
+    font-size: 1rem;
+  }
+
+  .event-list li {
+    font-size: 0.9rem;
+  }
+
+  .event-number {
+    font-size: 15px;
+  }
+
+  .event-title {
+    font-size: 15px;
+  }
+
+  .modal-body {
+    font-size: 0.9rem;
+  }
+
+  .modal-button {
+    padding: 6px 12px;
+    font-size: 0.8rem;
   }
 }

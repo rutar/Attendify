@@ -1,20 +1,75 @@
 .footer {
   display: flex;
-  justify-content: space-around;
-  background-color: #2b2b2b;
-  color: white;
-  padding: 32px;
+  justify-content: space-between;
+  background-color: #373737;
+  color: #e0e0e0;
+  width: 1180px;
+  height: 238px;
+  margin: 0 auto;
+  padding: 40px 60px;
+  box-sizing: border-box;
 
-  div {
-    width: 30%;
+  div:nth-child(1),
+  div:nth-child(2) {
+    width: 22%; // Reduced width for the first two columns
+    text-align: left;
+    white-space: nowrap;
+  }
 
-    h4 {
+  div:nth-child(3),
+  div:nth-child(4) {
+    width: 18%; // Increased width for the last two columns to fit text without wrapping
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  div:nth-child(4) .contact-section {
+    margin-top: 52px; // Lowers "Harukontor: Võrus"
+  }
+
+  h4 {
+    margin-bottom: 16px;
+    font-size: 30px;
+    font-weight: 350;
+    line-height: 1.4;
+    letter-spacing: 1.2px;
+    white-space: nowrap;
+  }
+
+  .shared-heading {
+    margin-bottom: 16px;
+    font-size: 30px;
+    font-weight: 350;
+    line-height: 1.4;
+    white-space: nowrap;
+    color: #e0e0e0;
+  }
+
+  .contact-section {
+    h5 {
       margin-bottom: 8px;
-      font-size: 16px;
+      font-size: 30px;
+      font-weight: 350;
+      line-height: 1.4;
+      white-space: nowrap;
+      color: #e0e0e0;
     }
 
     p {
-      margin: 4px 0;
+      margin: 8px 0;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.5;
+      white-space: nowrap; // Prevents text from wrapping
+      color: #e0e0e0;
     }
+  }
+
+  p {
+    margin: 8px 0;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #e0e0e0;
   }
 }

@@ -1,0 +1,91 @@
+<div class="participant-list-wrapper">
+  <div class="card">
+    <div class="card-header">
+      Osavõtjad
+    </div>
+    <div class="card-body">
+      <section *ngIf="event()" class="event-info mb-4">
+        <div class="event-row">
+          <div class="event-label">Ürituse nimi:</div>
+          <span class="event-value">{{ event()!.name }}</span>
+        </div>
+        <div class="event-row">
+          <div class="event-label">Toimumisaeg:</div>
+          <span class="event-value">{{ event()!.dateTime | date:'dd.MM.yyyy' }}</span>
+        </div>
+        <div class="event-row">
+          <div class="event-label">Koht:</div>
+          <span class="event-value">{{ event()!.location || 'Määramata' }}</span>
+        </div>
+      </section>
+
+      <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
+
+      <section class="participants-list mb-4">
+        <h6>Osavõtjad</h6>
+        <div class="participant-list">
+          <div class="participant-row" *ngFor="let p of participants(); let i = index; trackBy: trackById">
+            <span class="participant-spacer"></span>
+            <span class="participant-number">{{ i + 1 }}.</span>
+            <span class="participant-name">
+              <ng-container *ngIf="p.type === 'PERSON'">
+                {{ p.firstName || '' }} {{ p.lastName || '' }}
+              </ng-container>
+              <ng-container *ngIf="p.type === 'COMPANY'">
+                {{ p.companyName || 'Nimetu ettevõte' }}
+              </ng-container>
+            </span>
+            <div class="participant-actions">
+              <a routerLink="/participants/{{ p.id }}" class="btn btn-view">VAATA</a>
+              <button (click)="deleteParticipant(p.id!)" class="btn btn-delete">KUSTUTA</button>
+            </div>
+          </div>
+          <div class="no-participants" *ngIf="!participants().length">
+            Osavõtjaid pole
+          </div>
+        </div>
+      </section>
+
+      <h3>Lisa uus osavõtja</h3>
+      <form [formGroup]="participantForm" (ngSubmit)="addParticipant()">
+        <div class="mb-3">
+          <label class="form-label">Osavõtja tüüp</label>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="radio"
+              formControlName="type"
+              value="PERSON"
+              id="personType"
+            />
+            <label class="form-check-label" for="personType">Füüsiline isik</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="radio"
+              formControlName="type"
+              value="COMPANY"
+              id="companyType"
+            />
+            <label class="form-check-label" for="companyType">Ettevõte</label>
+          </div>
+
+          <div class="mb-3">
+            <label for="additionalInfo" class="form-label">Lisainfo (valikuline)</label>
+            <textarea
+              id="additionalInfo"
+              formControlName="additionalInfo"
+              class="form-control"
+            ></textarea>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <a routerLink="/events" class="btn btn-outline-secondary">Tagasi</a>
+            <button type="submit" class="btn btn-primary" [disabled]="participantForm.invalid">Lisa osavõtja</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

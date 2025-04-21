@@ -1,22 +1,96 @@
 .hero {
+  margin-bottom: 0px;
+}
+
+.hero-container {
   display: flex;
-  justify-content: space-between;
+  width: 1180px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  box-shadow: none;
+}
+
+.hero-text {
+  width: 590px; /* Exactly half of 1180px */
+  background-color: #005aa2;
+  color: #ffffff;
   padding: 32px;
-  background-color: #005ca5;
-  color: white;
+  box-sizing: border-box; /* Padding is included in the width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+}
 
-  .text {
-    width: 50%;
-    font-size: 18px;
+.hero-text p {
+  font-family: 'Arial', sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+}
 
-    .highlight {
-      font-weight: bold;
-    }
+.hero-text p strong {
+  font-weight: 700;
+}
+
+.hero-image {
+  width: 590px; /* Exactly half of 1180px */
+  box-sizing: border-box;
+  box-shadow: none;
+}
+
+.hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 1200px) {
+  .hero-container {
+    width: 100%;
+    max-width: 1180px;
+    padding: 0 16px;
+    box-sizing: border-box; /* Ensure padding is included in container width */
   }
 
-  .image img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 4px;
+  .hero-text,
+  .hero-image {
+    width: 50%; /* Switch to percentage for responsiveness */
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-container {
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .hero-text,
+  .hero-image {
+    width: 100%; /* Full width on mobile */
+  }
+
+  .hero-text {
+    padding: 24px;
+  }
+
+  .hero-image img {
+    height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-text {
+    padding: 16px;
+  }
+
+  .hero-text p {
+    font-size: 16px;
+  }
+
+  .hero-image img {
+    height: 200px;
   }
 }

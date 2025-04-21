@@ -1,10 +1,25 @@
 <header class="header">
-  <div class="logo">NULLAM</div>
-  <nav class="nav">
-    <a class="nav-link active" href="#">AVALEHT</a>
-    <a class="nav-link" href="#">ÜRITUSE LISAMINE</a>
-  </nav>
-  <div class="icon">
-    <img src="assets/icon.svg" alt="Logo" />
+  <div class="header-container">
+    <div class="logo">
+      <img src="/logo.svg" alt="NULLAM logo" />
+    </div>
+    <nav class="nav">
+      <a
+        routerLink="/events"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link"
+        aria-label="Avaleht"
+      >AVALEHT</a>
+      <a
+        routerLink="/events/new"
+        routerLinkActive="active"
+        class="nav-link"
+        aria-label="Ürituse Lisamine"
+      >ÜRITUSE LISAMINE</a>
+    </nav>
+    <div class="symbol">
+      <img src="/symbol.svg" alt="Organization Symbol" />
+    </div>
   </div>
 </header>

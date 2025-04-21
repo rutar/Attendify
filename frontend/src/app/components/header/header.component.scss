@@ -1,33 +1,120 @@
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 32px;
-  background-color: #fff;
-  border-bottom: 1px solid #ddd;
+  margin-bottom: 16px;
+}
 
-  .logo {
-    font-weight: bold;
-    font-size: 24px;
+.header-container {
+  display: flex;
+  align-items: center;
+  width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 72px;
+  background-color: #ffffff;
+}
+
+.logo {
+  img {
+    height: 40px;
+  }
+}
+
+.nav {
+  display: flex;
+  gap: 0;
+  margin-left: 150px;
+}
+
+.nav-link {
+  color: #005aa2;
+  background-color: #ffffff;
+  font-family: 'Arial', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0 16px;
+  height: 72px;
+  line-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s, background-color 0.5s;
+  border-style: none;
+
+  &.active {
+    color: #ffffff;
+    background-color: #005aa1;
+    border: none; /* Ensure no border in active state */
+    border-bottom: none;
+  }
+
+  &:hover {
+    color: #ffffff;
+    background-color: #005aa1;
+    border: none; /* No border on hover */
+    border-bottom: none;
+  }
+
+  &:focus {
+    border: none; /* No border on focus */
+    border-bottom: none;
+  }
+
+  &:active {
+    border: none; /* Explicitly no border during click */
+    border-bottom: none;
+    outline: none; /* Remove any browser-default outline during click */
+  }
+}
+
+.symbol {
+  margin-left: auto;
+  img {
+    height: 55px;
+    width: 55px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .header-container {
+    width: 100%;
+    max-width: 1180px;
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    gap: 12px;
+    height: auto;
+    padding: 16px;
   }
 
   .nav {
-    display: flex;
-    gap: 24px;
-
+    flex-direction: row;
+    width: 100%;
+    margin-left: 0;
     .nav-link {
-      text-decoration: none;
-      color: #004e92;
-      font-weight: 600;
-
-      &.active {
-        border-bottom: 2px solid #004e92;
-      }
+      flex: 1;
+      height: 48px;
+      line-height: 48px;
     }
   }
 
-  .icon img {
-    width: 32px;
-    height: 32px;
+  .symbol {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 8px;
+  }
+
+  .nav .nav-link {
+    font-size: 12px;
+    height: 40px;
+    line-height: 40px;
   }
 }
