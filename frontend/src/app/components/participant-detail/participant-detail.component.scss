@@ -1,5 +1,16 @@
 .container {
-  max-width: 600px;
+  display: flex;
+  justify-content: center;
+  width: 1230px;
+  background-color: #eef4f3;
+  box-sizing: border-box;
+  align-items: center;
+  max-width: 100%;
+  padding-bottom: 16px;
+  position: relative;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .form-check-inline {
@@ -9,3 +20,260 @@
 .card-body {
   padding: 20px;
 }
+
+.participant-list-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 1180px;
+  background-color: #eef4f3;
+  box-sizing: border-box;
+  align-items: center;
+  max-width: 100%;
+  margin: 0 auto;
+  padding-bottom: 16px;
+  position: relative;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.radio-buttons {
+  padding-left: 60px;
+}
+
+.card {
+  background-color: white;
+  max-width: 1180px;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0 0 0 350px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.card-header {
+  border: none;
+  font-size: 24px;
+  font-family: 'Open Sans', sans-serif;
+  color: #005aa1;
+  margin-bottom: 10px;
+  padding-top: 30px;
+  background-color: transparent;
+}
+
+.card-body {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 16px;
+  color: #222;
+}
+
+.event-info {
+  display: flex;
+  flex-direction: column;
+  font-family: 'Open Sans', sans-serif;
+  gap: 1.0rem;
+}
+
+.event-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.event-label {
+  width: 160px;
+  font-weight: 400;
+  color: #333;
+}
+
+.event-value {
+  flex: 1;
+  font-weight: 300;
+  color: #555;
+}
+
+.participants-list {
+  margin-bottom: 10px;
+}
+
+.participants-list h3 {
+  font-size: 24px;
+  font-family: 'Open Sans', sans-serif;
+  margin-bottom: 20px;
+}
+
+.participant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.participant-row {
+  display: flex;
+  padding: 4px 160px;
+  background: #fff;
+  border: none;
+}
+
+.participant-col {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 15px;
+  color: #222;
+}
+
+.participant-col.number {
+  width: 20px;
+  flex-shrink: 0;
+  font-weight: 400;
+}
+
+.participant-col.name {
+  flex: 1.5;
+  font-weight: 400;
+}
+
+.participant-col.code {
+  flex: 1.2;
+  font-weight: 300;
+  color: #555;
+  gap: 35px;
+}
+
+.participant-col.actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 25px;
+}
+
+.uppercase-link {
+  text-transform: uppercase;
+  font-size: 13px;
+  font-family: 'Open Sans', sans-serif;
+  color: #005aa1;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.uppercase-link:hover {
+  color: #003d73;
+  text-decoration: none;
+}
+
+.add-event-link {
+  display: inline-block;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  width: 55%;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 7px;
+}
+
+.form-row label {
+  width: 130px;
+  font-weight: 500;
+  font-size: 15px;
+  font-family: 'Open Sans', sans-serif;
+  letter-spacing: -1px;
+}
+
+.form-row input, select, textarea {
+  flex: 1;
+  font-size: 14px;
+  border: 1px solid #999;
+  border-radius: 3px;
+  background-color: #ffffff;
+  min-width: 200px;
+  line-height: 1.5;
+}
+
+.form-row select {
+  min-height: 27px;
+}
+
+.form-row textarea {
+  resize: none;
+  min-height: 64px;
+}
+
+.form-row textarea {
+  resize: none;
+  min-height: 64px;
+}
+
+
+.form-row input:focus {
+  border-color: #007bff;
+  background-color: #fff;
+  outline: none;
+}
+
+.form-row input.is-invalid {
+  border-color: #c00;
+  background-color: #fff5f5;
+}
+
+.error-msg {
+  font-size: 13px;
+  color: #c00;
+  margin-left: 150px;
+  width: calc(110% - 150px);
+  text-align: left;
+  margin-top: -18px;
+}
+
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-left: 0;
+  margin-top: 50px;
+  padding-bottom: 80px;
+
+  .btn-grey,
+  .btn-blue {
+    padding: 2px;
+    width: 70px;
+    border: none;
+    border-radius: 3px;
+    font-size: 15px;
+    font-family: 'Open Sans', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .btn-grey {
+    background-color: #ccc;
+    color: #000;
+
+    &:hover {
+      background-color: #bbb;
+    }
+  }
+
+  .btn-blue {
+    background-color: #005aa1;
+    color: white;
+
+    &:hover {
+      background-color: #005aa1;
+    }
+  }
+}
+
+
+
