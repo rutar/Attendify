@@ -10,11 +10,15 @@
         <li *ngFor="let event of futureEvents(); let i = index; trackBy: trackById">
           <div class="event-title-container">
             <span class="event-number">{{ i + 1 }}.</span>
-            <span class="event-title">{{ event.name }}</span>
+            <span class="event-title" [routerLink]="'/events/' + event.id" style="cursor: pointer;">{{ event.name }}</span>
           </div>
           <span class="event-date">{{ event.dateTime | date: 'dd.MM.yyyy' }}</span>
+          <span class="event-location">{{ event.location }}</span>
+          <span class="event-participants-count">{{ event.totalParticipants }}</span>
           <div class="event-actions">
-            <a [routerLink]="'/events/' + event.id + '/participants'" class="uppercase-link">Osavõtjad</a>
+            <button [routerLink]="'/events/' + event.id + '/new'" title="Lisa osavõtja" class="add-participant-button">
+              <img src="/add.svg" alt="Add participant" class="add-participant-icon" />
+            </button>
             <button (click)="openDeleteModal(event)" title="Kustuta" class="delete-button">
               <img src="/remove.svg" alt="Remove event" class="delete-icon" />
             </button>
@@ -36,11 +40,15 @@
         <li *ngFor="let event of pastEvents(); let i = index; trackBy: trackById">
           <div class="event-title-container">
             <span class="event-number">{{ i + 1 }}.</span>
-            <span class="event-title">{{ event.name }}</span>
+            <span class="event-title" [routerLink]="'/events/' + event.id + '/participants'" style="cursor: pointer;">{{ event.name }}</span>
           </div>
           <span class="event-date">{{ event.dateTime | date: 'dd.MM.yyyy' }}</span>
+          <span class="event-location">{{ event.location }}</span>
+          <span class="event-participants-count">{{ event.totalParticipants }}</span>
           <div class="event-actions">
-            <a [routerLink]="'/events/' + event.id + '/participants'" class="uppercase-link">Osavõtjad</a>
+            <button [routerLink]="'/events/' + event.id + '/new'" title="Lisa osavõtja" class="add-participant-button">
+              <img src="/add.svg" alt="Add participant" class="add-participant-icon" />
+            </button>
           </div>
         </li>
         <li *ngIf="!pastEvents().length" class="empty-message">
