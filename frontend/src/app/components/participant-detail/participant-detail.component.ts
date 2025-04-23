@@ -140,22 +140,45 @@ export class ParticipantDetailComponent implements OnInit {
       additionalInfo: formValue.additionalInfo || undefined
     };
 
-    if (this.isEditMode()) {
-      const id = Number(this.route.snapshot.paramMap.get('id'));
-      participant.id = id;
-      this.participantService.updateParticipant(id, participant).subscribe({
-        next: () => this.router.navigate(['/participants']),
-        error: () => this.error.set(this.errorMessages.participant_save_failed)
-      });
-    } else {
-      this.participantService.createParticipant(participant).subscribe({
-        next: () => this.router.navigate(['/participants']),
-        error: () => this.error.set(this.errorMessages.participant_save_failed)
-      });
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    participant.id = id;
+    this.participantService.updateParticipant(id, participant).subscribe({
+      next: () => this.router.navigate(['/participants']),
+      error: () => this.error.set(this.errorMessages.participant_save_failed)
+    });
+  }
+
+
+  private getEventId(): string | null {
+    // Traverse pathFromRoot to find the route with event_id
+    for (const snapshot of this.route.snapshot.pathFromRoot) {
+      if (snapshot.paramMap.has('id') && snapshot.routeConfig?.path?.includes('events/:id')) {
+        return snapshot.paramMap.get('id'); // 'id' here is event_id from /events/:id
+      }
     }
+    return null;
   }
 
   goBack(): void {
-    this.router.navigate(['/participants']);
+    const eventId = this.getEventId();
+    console.log('Retrieved event_id:', eventId); // Debug
+    if (eventId) {
+      this.router.navigate([`/events/${eventId}/participants`]);
+    } else {
+      console.warn('No event_id found, navigating to /events');
+      this.router.navigate(['/events']);
+    }
+  }
+
+  logRouteHierarchy(): void {
+    const pathFromRoot = this.route.snapshot.pathFromRoot;
+    console.log('Route Hierarchy:');
+    pathFromRoot.forEach((snapshot, index) => {
+      console.log(`Level ${index}:`, {
+        url: snapshot.url.map(segment => segment.path).join('/'),
+        params: snapshot.paramMap.keys.length ? snapshot.paramMap : 'No params',
+        routeConfig: snapshot.routeConfig ? snapshot.routeConfig.path : 'No route config'
+      });
+    });
   }
 }

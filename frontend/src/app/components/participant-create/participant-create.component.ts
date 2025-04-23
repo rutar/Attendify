@@ -9,13 +9,13 @@ import { Participant } from '../../models/participant.model';
 import {updateParticipantValidators} from '../../utils/form-utils';
 
 @Component({
-  selector: 'app-participant-list',
+  selector: 'app-participant-create',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './participant-list.component.html',
-  styleUrls: ['./participant-list.component.scss'],
+  templateUrl: './participant-create.component.html',
+  styleUrls: ['./participant-create.component.scss'],
 })
-export class ParticipantListComponent implements OnInit {
+export class ParticipantCreateComponent implements OnInit {
   event = signal<EventData | null>(null);
   participants = signal<Participant[]>([]);
   participantForm: FormGroup;
@@ -28,6 +28,8 @@ export class ParticipantListComponent implements OnInit {
     participant_delete_failed: 'Osaleja kustutamine ebaõnnestus',
     invalid_form: 'Palun täitke kohustuslikud väljad korrektselt'
   };
+  private router: any;
+  eventId: string | null | undefined;
 
   constructor(
     private fb: FormBuilder,
@@ -52,14 +54,14 @@ export class ParticipantListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const eventId = this.route.snapshot.paramMap.get('id');
-    if (eventId) {
-      this.eventService.getEvent(+eventId).subscribe({
+    this.eventId = this.route.snapshot.paramMap.get('id');
+    if (this.eventId) {
+      this.eventService.getEvent(+this.eventId).subscribe({
         next: (event) => this.event.set(event),
         error: () => this.error.set(this.errorMessages.event_load_failed)
       });
 
-      this.eventService.getEventParticipants(+eventId).subscribe({
+      this.eventService.getEventParticipants(+this.eventId).subscribe({
         next: (participants) => this.participants.set(participants),
         error: () => this.error.set(this.errorMessages.participants_load_failed)
       });
@@ -70,6 +72,10 @@ export class ParticipantListComponent implements OnInit {
     });
 
     updateParticipantValidators(this.participantForm, 'PERSON');
+  }
+
+  navigateToParticipant(eventId: string, participantId: string): void {
+    this.router.navigate([`/events/${eventId}/participants/${participantId}`]);
   }
 
   addParticipant(): void {
