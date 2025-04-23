@@ -18,6 +18,7 @@ export class EventCreateComponent {
     dateTime: '',
     location: '',
     additionalInfo: '',
+    totalParticipants: 0
   };
 
   error: string | null = null;
