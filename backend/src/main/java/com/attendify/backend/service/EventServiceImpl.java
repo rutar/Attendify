@@ -2,7 +2,6 @@ package com.attendify.backend.service;
 
 import com.attendify.backend.domain.Event;
 import com.attendify.backend.exception.ResourceNotFoundException;
-import com.attendify.backend.mapper.ParticipantMapper;
 import com.attendify.backend.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

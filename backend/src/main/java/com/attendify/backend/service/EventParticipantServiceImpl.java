@@ -55,13 +55,4 @@ public class EventParticipantServiceImpl implements EventParticipantService {
 
         eventParticipantRepository.deleteByEventAndParticipant(event, participant);
     }
-
-    @Override
-    @Transactional
-    public void removeAllParticipantsFromEvent(Long eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
-
-        eventParticipantRepository.deleteByEvent(event);
-    }
 }

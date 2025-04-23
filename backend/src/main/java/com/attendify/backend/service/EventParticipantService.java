@@ -6,6 +6,4 @@ public interface EventParticipantService {
     ParticipantDTO addParticipantToEvent(Long eventId, ParticipantDTO participantDTO);
 
     void removeParticipantFromEvent(Long eventId, Long participantId);
-
-    void removeAllParticipantsFromEvent (Long eventId);
 }
