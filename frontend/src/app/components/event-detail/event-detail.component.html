@@ -1,211 +1,72 @@
-<div class="container mt-4">
-  <div *ngIf="isLoading()" class="alert alert-info">Laadimine...</div>
-  <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
-
-  <div *ngIf="event() as evt" class="card">
+<div class="participant-list-wrapper">
+  <div class="card">
     <div class="card-header">
-      <h2 class="text-center">{{ evt.name }}</h2>
+      Osavõtjad
     </div>
     <div class="card-body">
-      <p class="card-text">{{ evt.additionalInfo || 'Kirjeldus puudub' }}</p>
-      <p><strong>Kuupäev:</strong> {{ evt.dateTime }}</p>
-      <p><strong>Asukoht:</strong> {{ evt.location || 'Määramata' }}</p>
+      <section *ngIf="event()" class="event-info mb-4">
+        <div class="event-row">
+          <div class="event-label">Ürituse nimi:</div>
+          <span class="event-value">{{ event()!.name }}</span>
+        </div>
+        <div class="event-row">
+          <div class="event-label">Toimumisaeg:</div>
+          <span class="event-value">{{ event()!.dateTime | date:'dd.MM.yyyy' }}</span>
+        </div>
+        <div class="event-row">
+          <div class="event-label">Koht:</div>
+          <span class="event-value">{{ event()!.location || 'Määramata' }}</span>
+        </div>
+      </section>
 
-      <h4>Osalejad</h4>
-      <div *ngIf="participants().length === 0" class="alert alert-info">Osalejaid pole veel lisatud.</div>
-      <table *ngIf="participants().length > 0" class="table table-striped table-responsive">
-        <thead>
-        <tr>
-          <th>Nimi</th>
-          <th>Tüüp</th>
-          <th>Makseviis</th>
-          <th>Lisainfo</th>
-          <th>Tegevused</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let participant of participants(); trackBy: trackById">
-          <td>{{ getParticipantName(participant) }}</td>
-          <td>{{ participant.type === 'PERSON' ? 'Füüsiline isik' : participant.type === 'COMPANY' ? 'Juriidiline isik' : 'Määramata' }}</td>
-          <td>{{ participant.paymentMethod || 'Puudub' }}</td>
-          <td>{{ participant.additionalInfo || 'Puudub' }}</td>
-          <td>
-            <button class="btn btn-danger btn-sm" (click)="removeParticipant(participant.id!)">
-              Eemalda
-            </button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+      <section class="participants-list mb-4">
+        <div class="event-label">Osavõtjad:</div>
+        <span class="no-participants" *ngIf="!(participants().length);">Osavõtjaid pole</span>
+        <div class="participants-list" *ngIf="participants().length;">
+          <div class="participant-row" *ngFor="let p of participants(); let i = index; trackBy: trackById">
 
-      <h4>Lisa olemasolev osaleja</h4>
-      <div class="mb-3">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Otsi osalejat</mat-label>
-          <input
-            matInput
-            [formControl]="searchControl"
-            [matAutocomplete]="auto"
-            (input)="onSearchInput($event)"
-            placeholder="Sisesta nimi..."
-          >
-          <mat-autocomplete #auto="matAutocomplete" (optionSelected)="addExistingParticipant($event)">
-            <mat-option *ngFor="let participant of allParticipants(); trackBy: trackById" [value]="participant">
-              {{ getParticipantName(participant) }} ({{ participant.type === 'PERSON' ? 'Füüsiline isik' : participant.type === 'COMPANY' ? 'Juriidiline isik' : 'Määramata' }})
-            </mat-option>
-          </mat-autocomplete>
-        </mat-form-field>
-      </div>
+            <div class="participant-col number">
+              {{ i + 1 }}.
+            </div>
 
-      <h4>Lisa uus osaleja</h4>
-      <div class="mb-3">
-        <label for="participantType" class="form-label">Osaleja tüüp</label>
-        <select
-          class="form-select"
-          id="participantType"
-          [ngModel]="newParticipantType()"
-          (ngModelChange)="onParticipantTypeChange($event)"
-        >
-          <option [ngValue]="null">Vali tüüp</option>
-          <option [ngValue]="'PERSON'">Füüsiline isik</option>
-          <option [ngValue]="'COMPANY'">Juriidiline isik</option>
-        </select>
-      </div>
+            <div class="participant-col name" [routerLink]="'/participants/' + p.id" style="cursor: pointer;">
+              <ng-container *ngIf="p.type === 'PERSON'">
+                {{ p.firstName }} {{ p.lastName }}
+              </ng-container>
+              <ng-container *ngIf="p.type === 'COMPANY'">
+                {{ p.companyName || 'Nimetu ettevõte' }}
+              </ng-container>
+            </div>
 
-      <div *ngIf="newParticipantType()">
-        <div *ngIf="newParticipantType() === 'PERSON'">
-          <div class="mb-3">
-            <label for="firstName" class="form-label">Eesnimi</label>
-            <input
-              type="text"
-              class="form-control"
-              id="firstName"
-              [(ngModel)]="newParticipant().firstName"
-              placeholder="Sisesta eesnimi"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="lastName" class="form-label">Perekonnanimi</label>
-            <input
-              type="text"
-              class="form-control"
-              id="lastName"
-              [(ngModel)]="newParticipant().lastName"
-              placeholder="Sisesta perekonnanimi"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="personalCode" class="form-label">Isikukood</label>
-            <input
-              type="text"
-              class="form-control"
-              id="personalCode"
-              [(ngModel)]="newParticipant().personalCode"
-              placeholder="Sisesta isikukood"
-              required
-            />
+            <div class="participant-col code">
+              <ng-container *ngIf="p.type === 'PERSON'">
+                {{ p.personalCode }}
+              </ng-container>
+              <ng-container *ngIf="p.type === 'COMPANY'">
+                {{ p.registrationCode }}
+              </ng-container>
+            </div>
+
+            <div class="participant-col actions">
+              <a
+                href="#"
+                (click)="deleteParticipant(p.id!); $event.preventDefault();"
+                class="uppercase-link add-event-link"
+              >KUSTUTA</a>
+            </div>
+
           </div>
         </div>
-
-        <div *ngIf="newParticipantType() === 'COMPANY'">
-          <div class="mb-3">
-            <label for="companyName" class="form-label">Ettevõtte nimi</label>
-            <input
-              type="text"
-              class="form-control"
-              id="companyName"
-              [(ngModel)]="newParticipant().companyName"
-              placeholder="Sisesta ettevõtte nimi"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="registrationCode" class="form-label">Registrikood</label>
-            <input
-              type="text"
-              class="form-control"
-              id="registrationCode"
-              [(ngModel)]="newParticipant().registrationCode"
-              placeholder="Sisesta registrikood"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="participantCount" class="form-label">Osalejate arv (valikuline)</label>
-            <input
-              type="number"
-              class="form-control"
-              id="participantCount"
-              [(ngModel)]="newParticipant().participantCount"
-              placeholder="Sisesta osalejate arv"
-            />
-          </div>
-          <div class="mb-3">
-            <label for="contactPerson" class="form-label">Kontaktisik (valikuline)</label>
-            <input
-              type="text"
-              class="form-control"
-              id="contactPerson"
-              [(ngModel)]="newParticipant().contactPerson"
-              placeholder="Sisesta kontaktisiku nimi"
-            />
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label for="paymentMethod" class="form-label">Makseviis</label>
-          <select
-            class="form-select"
-            id="paymentMethod"
-            [(ngModel)]="newParticipant().paymentMethod"
-            required
-          >
-            <option [ngValue]="null">Vali makseviis</option>
-            <option value="CARD">Kaart</option>
-            <option value="BANK_TRANSFER">Pangaülekanne</option>
-            <option value="CASH">Sularaha</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label for="email" class="form-label">Email (valikuline)</label>
-          <input
-            type="email"
-            class="form-control"
-            id="email"
-            [(ngModel)]="newParticipant().email"
-            placeholder="Sisesta email"
-          />
-        </div>
-        <div class="mb-3">
-          <label for="phone" class="form-label">Telefon (valikuline)</label>
-          <input
-            type="text"
-            class="form-control"
-            id="phone"
-            [(ngModel)]="newParticipant().phone"
-            placeholder="Sisesta telefon"
-          />
-        </div>
-        <div class="mb-3">
-          <label for="additionalInfo" class="form-label">Lisainfo (valikuline)</label>
-          <textarea
-            class="form-control"
-            id="additionalInfo"
-            [(ngModel)]="newParticipant().additionalInfo"
-            placeholder="Sisesta lisainfo"
-          ></textarea>
-        </div>
-
-        <button
-          class="btn btn-primary mt-2"
-          (click)="createNewParticipant()"
-          [disabled]="!isNewParticipantValid()"
-        >
-          Lisa osaleja
-        </button>
-      </div>
+      </section>
     </div>
+
+
+
+      <div class="form-actions">
+        <a routerLink="/events" class="btn-grey">Tagasi</a>
+      </div>
+
+
+
   </div>
 </div>
