@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 007-insert-initial-events
+      id: 010-insert-initial-events
       author: SA
       changes:
         - insert:
@@ -70,7 +70,7 @@ databaseChangeLog:
                   value: "Kunst, muusika ja kohalikud toidud"
 
   - changeSet:
-      id: 008-insert-initial-participants-persons
+      id: 011-insert-initial-participants-persons
       author: SA
       changes:
         - insert:
@@ -114,7 +114,7 @@ databaseChangeLog:
   
   
   - changeSet:
-      id: 009-insert-initial-participants-companies
+      id: 012-insert-initial-participants-companies
       author: SA
       changes:
         - insert:
@@ -161,7 +161,7 @@ databaseChangeLog:
   
   
   - changeSet:
-      id: 010-insert-initial-event-participants
+      id: 013-insert-initial-event-participants
       author: SA
       changes:
         - insert:

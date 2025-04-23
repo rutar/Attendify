@@ -35,6 +35,12 @@ databaseChangeLog:
                   name: additional_info
                   type: varchar(1500)
               - column:
+                  name: total_participants
+                  type: int
+                  defaultValue: '0'
+                  constraints:
+                    nullable: false
+              - column:
                   name: created_at
                   type: timestamptz
                   defaultValueComputed: "CURRENT_TIMESTAMP"
@@ -243,3 +249,140 @@ databaseChangeLog:
             columns:
               - column:
                   name: registration_code
+
+  - changeSet:
+      id: 007-1-create-update-event-participants-fn
+      author: SA
+      changes:
+        - sql:
+            comment: Create function to update total_participants when event_participant is modified
+            sql: |
+              CREATE OR REPLACE FUNCTION update_event_participants()
+              RETURNS TRIGGER 
+              LANGUAGE plpgsql
+              AS $$
+              BEGIN
+                  UPDATE events e
+                  SET total_participants = (
+                      SELECT COALESCE(SUM(
+                          CASE
+                              WHEN p.participant_type = 'PERSON' THEN 1
+                              WHEN p.participant_type = 'COMPANY' THEN COALESCE(c.participant_count, 0)
+                              ELSE 0
+                          END
+                      ), 0)
+                      FROM event_participant ep
+                      JOIN participants p ON ep.participant_id = p.id
+                      LEFT JOIN companies c ON p.id = c.id AND p.participant_type = 'COMPANY'
+                      WHERE ep.event_id = e.id
+                  );
+                  RETURN NULL;
+              END;
+              $$
+            stripComments: false
+            splitStatements: false
+
+  - changeSet:
+      id: 007-2-create-event-participant-trigger
+      author: SA
+      changes:
+        - sql:
+            comment: Create trigger on event_participant table to update total_participants
+            sql: |
+              CREATE TRIGGER event_participant_trigger
+              AFTER INSERT OR UPDATE OR DELETE
+              ON event_participant
+              FOR EACH ROW
+              EXECUTE FUNCTION update_event_participants();
+            stripComments: false
+            splitStatements: true
+
+  - changeSet:
+      id: 007-3-create-update-on-company-change-fn
+      author: SA
+      changes:
+        - sql:
+            comment: Create function to update total_participants when participant_count in companies changes
+            sql: |
+              CREATE OR REPLACE FUNCTION update_event_participants_on_company_change()
+              RETURNS TRIGGER 
+              LANGUAGE plpgsql
+              AS $$
+              BEGIN
+                  UPDATE events e
+                  SET total_participants = (
+                      SELECT COALESCE(SUM(
+                          CASE
+                              WHEN p.participant_type = 'PERSON' THEN 1
+                              WHEN p.participant_type = 'COMPANY' THEN COALESCE(c.participant_count, 0)
+                              ELSE 0
+                          END
+                      ), 0)
+                      FROM event_participant ep
+                      JOIN participants p ON ep.participant_id = p.id
+                      LEFT JOIN companies c ON p.id = c.id AND p.participant_type = 'COMPANY'
+                      WHERE ep.event_id = e.id
+                  )
+                  WHERE e.id IN (
+                      SELECT ep.event_id
+                      FROM event_participant ep
+                      WHERE ep.participant_id = NEW.id
+                  );
+                  RETURN NULL;
+              END;
+              $$
+            stripComments: false
+            splitStatements: false
+
+  - changeSet:
+      id: 007-4-create-company-participant-count-trigger
+      author: SA
+      changes:
+        - sql:
+            comment: Create trigger on companies table to update total_participants on participant_count change
+            sql: |
+              CREATE TRIGGER company_participant_count_trigger
+              AFTER UPDATE OF participant_count
+              ON companies
+              FOR EACH ROW
+              EXECUTE FUNCTION update_event_participants_on_company_change();
+            stripComments: false
+            splitStatements: true
+
+  - changeSet:
+      id: 008-initialize-total-participants
+      author: SA
+      changes:
+        - sql:
+            comment: Initialize total_participants for existing events
+            sql: |
+              UPDATE events e
+              SET total_participants = (
+                  SELECT COALESCE(SUM(
+                      CASE
+                          WHEN p.participant_type = 'PERSON' THEN 1
+                          WHEN p.participant_type = 'COMPANY' THEN COALESCE(c.participant_count, 0)
+                      END
+                  ), 0)
+                  FROM event_participant ep
+                  JOIN participants p ON ep.participant_id = p.id
+                  LEFT JOIN companies c ON p.id = c.id AND p.participant_type = 'COMPANY'
+                  WHERE ep.event_id = e.id
+              );
+            stripComments: false
+              
+  - changeSet:
+      id: 009-add-constraints
+      author: SA
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE participants
+              ADD CONSTRAINT check_participant_type
+              CHECK (participant_type IN ('PERSON', 'COMPANY'));
+
+              ALTER TABLE companies
+              ADD CONSTRAINT check_participant_count
+              CHECK (participant_count > 0);
+              
+              
