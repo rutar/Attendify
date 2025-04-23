@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import {catchError, map, tap} from 'rxjs/operators';
 import { Participant } from '../models/participant.model';
 import { ConfigService } from './config.service';
 
@@ -48,9 +48,20 @@ export class ParticipantService {
 
   searchParticipants(query: string): Observable<Participant[]> {
     const url = `${this.configService.getApiBaseUrl()}/participants${
-      query ? `?search=${encodeURIComponent(query)}` : ''
+      query ? `?query=${encodeURIComponent(query)}` : ''
     }`;
-    return this.http.get<Participant[]>(url);
+
+    console.log(url);
+    return this.http.get<{ content: Participant[] }>(url).pipe(
+      map((response) => {
+        // Extract content array, ensure it's an array
+        return Array.isArray(response?.content) ? response.content : [];
+      }),
+      catchError((error) => {
+        console.error('Search participants failed:', error);
+        return of([]);
+      })
+    );
   }
 
   deleteParticipant(id: number): Observable<void> {
