@@ -4,6 +4,7 @@ export interface EventData {
   name: string;
   dateTime: string;
   location?: string;
+  totalParticipants: number;
   status: string;
   additionalInfo?: string;
   createdAt?: string;
