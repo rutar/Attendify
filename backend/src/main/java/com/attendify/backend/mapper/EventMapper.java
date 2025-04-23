@@ -15,6 +15,7 @@ public class EventMapper {
         eventDTO.setLocation(event.getLocation());
         eventDTO.setStatus(event.getStatus());
         eventDTO.setAdditionalInfo(event.getAdditionalInfo());
+        eventDTO.setTotalParticipants(event.getTotalParticipants());
         eventDTO.setCreatedAt(event.getCreatedAt());
         eventDTO.setUpdatedAt(event.getUpdatedAt());
         return eventDTO;
@@ -28,6 +29,7 @@ public class EventMapper {
         event.setLocation(eventDTO.getLocation());
         event.setStatus(eventDTO.getStatus());
         event.setAdditionalInfo(eventDTO.getAdditionalInfo());
+        event.setTotalParticipants(eventDTO.getTotalParticipants());
         return event;
     }
 }

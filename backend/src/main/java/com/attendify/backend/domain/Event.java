@@ -39,6 +39,9 @@ public class Event {
     @Column(name = "additional_info", length = 1500)
     private String additionalInfo;
 
+    @Column(name = "total_participants")
+    private Integer totalParticipants;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

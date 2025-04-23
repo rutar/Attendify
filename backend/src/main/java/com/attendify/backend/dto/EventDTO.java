@@ -41,6 +41,9 @@ public class EventDTO {
     @Schema(description = "Additional information about the event", example = "Leading tech experts speaking")
     private String additionalInfo;
 
+    @Schema(description = "Number of total participants of the event", example = "57")
+    private Integer totalParticipants;
+
     @Schema(description = "Creation timestamp of the event", example = "2025-01-01T10:00:00Z")
     private OffsetDateTime createdAt;
 
