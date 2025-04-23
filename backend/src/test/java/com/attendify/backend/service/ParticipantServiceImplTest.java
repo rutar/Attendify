@@ -18,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -377,20 +376,12 @@ class ParticipantServiceImplTest {
     @Test
     void validateRegistrationCode_WithInvalidFormat_ShouldThrowIllegalArgumentException() {
         // Invalid formats
-        assertThrows(IllegalArgumentException.class, () -> {
-            participantService.validateRegistrationCode("123");
-        });
+        assertThrows(IllegalArgumentException.class, () -> participantService.validateRegistrationCode("123"));
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            participantService.validateRegistrationCode("1234567");
-        });
+        assertThrows(IllegalArgumentException.class, () -> participantService.validateRegistrationCode("1234567"));
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            participantService.validateRegistrationCode("123456789");
-        });
+        assertThrows(IllegalArgumentException.class, () -> participantService.validateRegistrationCode("123456789"));
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            participantService.validateRegistrationCode("1234567a");
-        });
+        assertThrows(IllegalArgumentException.class, () -> participantService.validateRegistrationCode("1234567a"));
     }
 }
