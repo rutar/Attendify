@@ -24,10 +24,17 @@ export class AppComponent {
   title = 'frontend';
 
   currentRoute = signal('');
+
+  // Условия для маршрутов
   showEvents = computed(() => this.currentRoute() === '/events');
   showAddEvent = computed(() => this.currentRoute() === '/events/new');
-  showParticipants = computed(() => /^\/events\/[^/]+\/participants$/.test(this.currentRoute()));
-  showParticipant = computed(() =>  /^\/participants\/[^/]/.test(this.currentRoute()));
+  showParticipant = computed(() => /^\/participants\/[^/]+/.test(this.currentRoute()));
+  addParticipant = computed(() => /^\/events\/[^/]+\/new$/.test(this.currentRoute()));
+  showEventDetails = computed(() =>
+    /^\/events\/[^/]+$/.test(this.currentRoute()) &&
+    !this.showEvents() &&
+    !this.showAddEvent()
+  );
 
   constructor(private router: Router) {
     this.router.events.subscribe(event => {

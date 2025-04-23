@@ -14,8 +14,8 @@ export const routes: Routes = [
     loadComponent: () => import('./components/event-detail/event-detail.component').then(m => m.EventDetailComponent),
   },
   {
-    path: 'events/:id/participants',
-    loadComponent: () => import('./components/participant-list/participant-list.component').then(m => m.ParticipantListComponent),
+    path: 'events/:id/new',
+    loadComponent: () => import('./components/participant-create/participant-create.component').then(m => m.ParticipantCreateComponent),
   },
   {
     path: 'participants/:id',

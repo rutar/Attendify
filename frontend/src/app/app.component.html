@@ -4,9 +4,11 @@
 
 <app-grass-banner *ngIf="showAddEvent()" text="Ürituse lisamine"></app-grass-banner>
 
-<app-grass-banner *ngIf="showParticipants()" text="Osavõtjad"></app-grass-banner>
+<app-grass-banner *ngIf="showEventDetails()" text="Osavõtjad"></app-grass-banner>
 
 <app-grass-banner *ngIf="showParticipant()" text="Osavõtja info"></app-grass-banner>
+
+<app-grass-banner *ngIf="addParticipant()" text="Osavõtjate lisamine"></app-grass-banner>
 
 <router-outlet></router-outlet>
 
