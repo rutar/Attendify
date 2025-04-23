@@ -1,85 +1,67 @@
 package com.attendify.backend.service;
 
 import com.attendify.backend.domain.Event;
+import com.attendify.backend.domain.EventParticipant;
+import com.attendify.backend.domain.EventParticipant.AttendanceStatus;
 import com.attendify.backend.domain.Participant;
 import com.attendify.backend.dto.ParticipantDTO;
-import com.attendify.backend.exception.DuplicateResourceException;
-import com.attendify.backend.exception.ResourceNotFoundException;
-import com.attendify.backend.mapper.ParticipantMapper;
+import com.attendify.backend.repository.EventParticipantRepository;
 import com.attendify.backend.repository.EventRepository;
+import com.attendify.backend.repository.ParticipantRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class EventParticipantServiceImpl implements EventParticipantService {
+
     private final EventRepository eventRepository;
-    private final ParticipantService participantService;
-    private final ParticipantMapper participantMapper;
+    private final ParticipantRepository participantRepository;
+    private final EventParticipantRepository eventParticipantRepository;
 
     @Override
     @Transactional
     public ParticipantDTO addParticipantToEvent(Long eventId, ParticipantDTO participantDTO) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
-        Participant participant;
+                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
 
-        if (participantDTO.getId() != null) {
-            // Existing participant
-            participant = participantService.getParticipantById(participantDTO.getId());
-        } else {
-            // New participant
-            validateParticipantDTO(participantDTO);
-            participant = participantMapper.toEntity(participantDTO);
-            participant = participantService.createParticipant(participant);
+        Participant participant = participantRepository.findById(participantDTO.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Participant not found"));
+
+        boolean alreadyRegistered = eventParticipantRepository.existsByEventAndParticipant(event, participant);
+        if (alreadyRegistered) {
+            throw new IllegalStateException("Participant already registered to event");
         }
 
-        if (event.getParticipants().contains(participant)) {
-            throw new DuplicateResourceException("Participant is already registered for this event");
-        }
+        EventParticipant eventParticipant = new EventParticipant();
+        eventParticipant.setEvent(event);
+        eventParticipant.setParticipant(participant);
+        eventParticipant.setAttendanceStatus(AttendanceStatus.REGISTERED);
 
-        event.getParticipants().add(participant);
-        eventRepository.save(event);
-        return participantMapper.toDto(participant);
+        eventParticipantRepository.save(eventParticipant);
+
+        return participantDTO;
     }
 
     @Override
     @Transactional
     public void removeParticipantFromEvent(Long eventId, Long participantId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
-        Participant participant = participantService.getParticipantById(participantId);
+                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
 
-        if (!event.getParticipants().contains(participant)) {
-            throw new ResourceNotFoundException("Participant with id: " + participantId + " is not registered for event with id: " + eventId);
-        }
+        Participant participant = participantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("Participant not found"));
 
-        event.getParticipants().remove(participant);
-        eventRepository.save(event);
+        eventParticipantRepository.deleteByEventAndParticipant(event, participant);
     }
 
-    private void validateParticipantDTO(ParticipantDTO participantDTO) {
-        if (participantDTO.getType() == null || (!participantDTO.getType().equals("PERSON") && !participantDTO.getType().equals("COMPANY"))) {
-            throw new IllegalArgumentException("Participant type must be PERSON or COMPANY");
-        }
-        if ("PERSON".equals(participantDTO.getType())) {
-            if (participantDTO.getFirstName() == null || participantDTO.getFirstName().trim().isEmpty()) {
-                throw new IllegalArgumentException("First name cannot be empty for person");
-            }
-            if (participantDTO.getLastName() == null || participantDTO.getLastName().trim().isEmpty()) {
-                throw new IllegalArgumentException("Last name cannot be empty for person");
-            }
-            if (participantDTO.getPersonalCode() == null || participantDTO.getPersonalCode().trim().isEmpty()) {
-                throw new IllegalArgumentException("Personal code cannot be empty for person");
-            }
-        } else {
-            if (participantDTO.getCompanyName() == null || participantDTO.getCompanyName().trim().isEmpty()) {
-                throw new IllegalArgumentException("Company name cannot be empty for company");
-            }
-            if (participantDTO.getRegistrationCode() == null || participantDTO.getRegistrationCode().trim().isEmpty()) {
-                throw new IllegalArgumentException("Registration code cannot be empty for company");
-            }
-        }
+    @Override
+    @Transactional
+    public void removeAllParticipantsFromEvent(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
+
+        eventParticipantRepository.deleteByEvent(event);
     }
 }

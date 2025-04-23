@@ -1,7 +1,6 @@
 package com.attendify.backend.service;
 
 import com.attendify.backend.domain.Event;
-import com.attendify.backend.dto.ParticipantDTO;
 
 import java.util.List;
 
