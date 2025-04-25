@@ -26,12 +26,9 @@
   padding: 16px;
   box-shadow: none;
   box-sizing: border-box;
-}
-
-.event-card:first-child {
-  width: 605px;
   margin-left: 0;
 }
+
 
 .event-section-header {
   background-color: #005aa1;
@@ -68,6 +65,29 @@
   padding: 0 0 120px 0;
 }
 
+.event-column-headers {
+  display: flex;
+  justify-content: flex-start;
+  padding: 4px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.event-column-header {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.event-column-header:nth-child(1) { width: 30px; } /* Nr */
+.event-column-header:nth-child(2) { width: 170px; } /* Ürituse nimi */
+.event-column-header:nth-child(3) { width: 90px; margin-left: 10px; } /* Kuupäev */
+.event-column-header:nth-child(4) { width: 100px; margin-left: 10px; } /* Asukoht */
+.event-column-header:nth-child(5) { width: 20px; margin-left: 10px; } /* Osalejate arv */
+
 .event-title-container {
   display: flex;
   align-items: flex-start;
@@ -80,6 +100,8 @@
   font-size: 14px;
   color: #707070;
   margin-right: 2px;
+  width: 30px;
+  white-space: nowrap;
 }
 
 .event-title {
@@ -87,7 +109,8 @@
   font-weight: 400;
   font-size: 14px;
   color: #707070;
-  word-break: break-word;
+  word-break: keep-all;
+  hyphens: auto;
   margin: 0;
   cursor: pointer;
   text-decoration: none;
@@ -110,29 +133,32 @@
 }
 
 .event-location {
-  width: 120px;
+  width: 140px;
   text-align: left;
   margin-left: 10px;
   color: #707070;
   font-size: 14px;
   font-family: 'Open Sans', sans-serif;
-  word-break: break-word;
+  word-break: keep-all;
+  hyphens: auto;
 }
 
 .event-participants-count {
-  width: 80px;
+  width: 20px;
   text-align: left;
   margin-left: 10px;
   color: #707070;
   font-size: 14px;
   font-family: 'Open Sans', sans-serif;
+  white-space: nowrap;
 }
 
 .event-actions {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  width: 80px; /* Уменьшено, так как меньше кнопок */
+  width: 80px;
+  margin-left: 10px;
 }
 
 .event-actions a.uppercase-link {
@@ -217,6 +243,8 @@
 
 .event-list li {
   display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
   gap: 12px;
   padding: 4px 0;
 }
@@ -316,6 +344,12 @@
     width: 50%;
   }
 
+  .event-column-header:nth-child(1) { width: 30px; } /* Nr */
+  .event-column-header:nth-child(2) { width: 150px; } /* Ürituse nimi */
+  .event-column-header:nth-child(3) { width: 70px; margin-left: 10px; } /* Kuupäev */
+  .event-column-header:nth-child(4) { width: 100px; margin-left: 10px; } /* Asukoht */
+  .event-column-header:nth-child(5) { width: 35px; margin-left: 10px; } /* Osalejate arv */
+
   .event-title-container {
     width: 150px;
   }
@@ -329,11 +363,11 @@
   }
 
   .event-participants-count {
-    width: 70px;
+    width: 35px;
   }
 
   .event-actions {
-    width: 60px; /* Уменьшено для двух кнопок */
+    width: 60px;
   }
 }
 
@@ -348,6 +382,12 @@
     width: 100%;
   }
 
+  .event-column-header:nth-child(1) { width: 30px; } /* Nr */
+  .event-column-header:nth-child(2) { width: 200px; } /* Ürituse nimi */
+  .event-column-header:nth-child(3) { width: 80px; margin-left: 10px; } /* Kuupäev */
+  .event-column-header:nth-child(4) { width: 120px; margin-left: 10px; } /* Asukoht */
+  .event-column-header:nth-child(5) { width: 40px; margin-left: 10px; } /* Osalejate arv */
+
   .event-title-container {
     width: 200px;
   }
@@ -361,7 +401,7 @@
   }
 
   .event-participants-count {
-    width: 80px;
+    width: 40px;
   }
 
   .event-actions {
@@ -378,32 +418,50 @@
     font-size: 1rem;
   }
 
+  .event-column-header {
+    font-size: 12px;
+  }
+
+  .event-column-header:nth-child(1) { width: 25px; } /* Nr */
+  .event-column-header:nth-child(2) { width: 150px; } /* Ürituse nimi */
+  .event-column-header:nth-child(3) { width: 70px; margin-left: 8px; } /* Kuupäev */
+  .event-column-header:nth-child(4) { width: 100px; margin-left: 8px; } /* Asukoht */
+  .event-column-header:nth-child(5) { width: 35px; margin-left: 8px; } /* Osalejate arv */
+
   .event-list li {
     font-size: 0.9rem;
   }
 
   .event-number {
-    font-size: 15px;
+    font-size: 13px;
+    width: 25px;
   }
 
   .event-title {
-    font-size: 15px;
+    font-size: 13px;
   }
 
   .event-date {
     font-size: 13px;
+    width: 70px;
+    margin-left: 8px;
   }
 
   .event-location {
     font-size: 13px;
+    width: 100px;
+    margin-left: 8px;
   }
 
   .event-participants-count {
     font-size: 13px;
+    width: 35px;
+    margin-left: 8px;
   }
 
   .event-actions {
     width: 60px;
+    margin-left: 8px;
   }
 
   .modal-body {
