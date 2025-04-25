@@ -1,5 +1,5 @@
 import { Component, OnInit, Signal, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { EventData } from '../../models/event.model';
 import { EventService } from '../../services/event.service';
@@ -7,7 +7,7 @@ import { EventService } from '../../services/event.service';
 @Component({
   selector: 'app-event-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NgOptimizedImage],
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss'],
 })
@@ -71,5 +71,11 @@ export class EventListComponent implements OnInit {
 
   trackById(index: number, event: EventData): number {
     return <number>event.id;
+  }
+
+  handleModalKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.closeDeleteModal();
+    }
   }
 }

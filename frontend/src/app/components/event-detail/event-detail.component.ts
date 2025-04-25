@@ -42,7 +42,7 @@ export class EventDetailComponent implements OnInit {
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       personalCode: ['', Validators.required],
-      companyName: [''],
+      companyName: ['', Validators.required],
       registrationCode: [''],
       participantCount: [null],
       contactPerson: [''],
