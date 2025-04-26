@@ -1,8 +1,8 @@
-import {Component, ElementRef, OnDestroy, OnInit, Renderer2, Signal, signal, ViewChild,} from '@angular/core';
+import { Component, OnInit, Signal, signal } from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
-import {RouterModule} from '@angular/router';
-import {EventData} from '../../models/event.model';
-import {EventService} from '../../services/event.service';
+import { RouterModule } from '@angular/router';
+import { EventData } from '../../models/event.model';
+import { EventService } from '../../services/event.service';
 
 @Component({
   selector: 'app-event-list',
@@ -11,50 +11,13 @@ import {EventService} from '../../services/event.service';
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss'],
 })
-export class EventListComponent implements OnInit, OnDestroy {
-
-  @ViewChild('overlay') overlayRef!: ElementRef;
-  @ViewChild('dialog') dialogRef!: ElementRef;
-  private overlayClickUnlistener: (() => void) | null = null;
-
-  ngAfterViewInit(): void {
-    if (this.overlayRef && this.dialogRef) {
-      const overlayEl = this.overlayRef.nativeElement;
-      this.overlayClickUnlistener = this.listenClick(overlayEl);
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.removeGlobalKeyListener();
-  }
-
-  private listenClick(overlayEl: HTMLElement): () => void {
-    const handler = (event: MouseEvent) => {
-      const dialogEl = this.dialogRef.nativeElement;
-      if (!dialogEl.contains(event.target)) {
-        this.closeDeleteModal();
-      }
-    };
-
-    overlayEl.addEventListener('click', handler);
-
-    return () => {
-      overlayEl.removeEventListener('click', handler);
-    };
-  }
-
-
+export class EventListComponent implements OnInit {
   futureEvents: Signal<EventData[]> = signal<EventData[]>([]);
   pastEvents: Signal<EventData[]> = signal<EventData[]>([]);
   error = signal<string | null>(null);
   eventToDelete: EventData | null = null;
 
-  private globalKeyListener: () => void = () => {};
-
-  constructor(
-    private eventService: EventService,
-    private renderer: Renderer2
-  ) {}
+  constructor(private eventService: EventService) {}
 
   ngOnInit(): void {
     this.loadEvents();
@@ -74,13 +37,11 @@ export class EventListComponent implements OnInit, OnDestroy {
   openDeleteModal(event: EventData): void {
     console.log('Opening delete modal for event:', event);
     this.eventToDelete = event;
-    this.addGlobalKeyListener();
   }
 
   closeDeleteModal(): void {
     console.log('Closing delete modal');
     this.eventToDelete = null;
-    this.removeGlobalKeyListener();
   }
 
   confirmDelete(): void {
@@ -88,7 +49,6 @@ export class EventListComponent implements OnInit, OnDestroy {
     if (this.eventToDelete && this.eventToDelete.id !== undefined) {
       this.removeEvent(this.eventToDelete);
       this.eventToDelete = null;
-      this.removeGlobalKeyListener();
     }
   }
 
@@ -105,7 +65,7 @@ export class EventListComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.error.set('Ürituse kustutamine ebaõnnestus');
-      },
+      }
     });
   }
 
@@ -113,22 +73,9 @@ export class EventListComponent implements OnInit, OnDestroy {
     return <number>event.id;
   }
 
-  onOverlayClick(): void {
-    this.closeDeleteModal();
-  }
-
-  private addGlobalKeyListener(): void {
-    this.globalKeyListener = this.renderer.listen('window', 'keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        this.closeDeleteModal();
-      }
-    });
-  }
-
-  private removeGlobalKeyListener(): void {
-    if (this.globalKeyListener) {
-      this.globalKeyListener();
-      this.globalKeyListener = () => {};
+  handleModalKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.closeDeleteModal();
     }
   }
 }

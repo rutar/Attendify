@@ -181,24 +181,53 @@ test.describe('EventListComponent', () => {
   });
 
   test('should delete event when confirming deletion', async () => {
-    // Open the modal first
+    // Wait for events to render
+    await page.waitForSelector('.event-card .event-list li', { timeout: 20000 });
+
+    // Log network responses for debugging
+    page.on('response', (response) => {
+      console.log(`Response: ${response.url()} - Status: ${response.status()}`);
+    });
+
+    // Get the first event ID from the UI
+    const firstFutureEventTitle = page.locator('.event-card').first().locator('.event-title').first();
+    const href = await firstFutureEventTitle.getAttribute('href');
+    if (!href) {
+      throw new Error('Failed to get href attribute from .event-title');
+    }
+    const match = href.match(/\/events\/(\d+)/);
+    if (!match) {
+      throw new Error(`href "${href}" does not match expected pattern /events/\\d+`);
+    }
+    const eventId = match[1];
+
+    // Open the delete modal
     const deleteButton = page.locator('.event-card').first().locator('.delete-button').first();
     await deleteButton.click();
+    await expect(page.locator('.modal-overlay')).toBeVisible({ timeout: 5000 });
 
     // Count events before deletion
     const futureEventsList = page.locator('.event-card').first().locator('.event-list li');
     const futureEventsCountBefore = await futureEventsList.count();
 
-    // Click confirm button and wait for delete request
-    const deleteResponsePromise = page.waitForResponse(`http://localhost:8080/api/events/${expectedFutureEvents[0].id}`);
+    // Click confirm button and wait for DELETE request
+    const deleteResponsePromise = page.waitForResponse(`http://localhost:8080/api/events/${eventId}`, { timeout: 10000 });
     await page.locator('.confirm-button').click();
-    await deleteResponsePromise;
+    const deleteResponse = await deleteResponsePromise;
+    console.log(`DELETE response status: ${deleteResponse.status()}`);
 
     // Modal should be closed
-    await expect(page.locator('.modal-overlay')).not.toBeVisible();
+    await expect(page.locator('.modal-overlay')).not.toBeVisible({ timeout: 5000 });
 
-    // Wait for events to reload
-    await page.waitForResponse('http://localhost:8080/api/events');
+    // Wait for UI to update (signal-based, no network request)
+    await page.waitForFunction(
+      (countBefore) => {
+        const list = document.querySelector('.event-card:first-child .event-list')?.querySelectorAll('li');
+        return list && list.length === countBefore - 1;
+      },
+      futureEventsCountBefore,
+      { timeout: 10000 }
+    );
 
     // Check that one event was removed
     await expect(futureEventsList).toHaveCount(futureEventsCountBefore - 1);
@@ -206,7 +235,7 @@ test.describe('EventListComponent', () => {
 
   test('should show error message when event loading fails', async () => {
     // Stop backend to simulate failure
-    await execPromise('docker-compose -f ../backend/docker-compose.yml stop backend', { cwd: process.cwd() });
+    await execPromise('docker-compose -f ../../backend/docker-compose.yml stop backend', { cwd: process.cwd() });
 
     await page.goto('/events');
 
@@ -215,7 +244,7 @@ test.describe('EventListComponent', () => {
     await expect(page.locator('.error-message')).toHaveText('Ürituste laadimine ebaõnnestus');
 
     // Restart backend
-    await execPromise('docker-compose -f ../backend/docker-compose.yml start backend', { cwd: process.cwd() });
+    await execPromise('docker-compose -f ../../backend/docker-compose.yml start backend', { cwd: process.cwd() });
     await waitForBackend();
   });
 
