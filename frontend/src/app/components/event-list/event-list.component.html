@@ -5,7 +5,7 @@
       <div class="event-section-header">Tulevased üritused</div>
       <div *ngIf="error()" class="error-message">{{ error() }}</div>
 
-      <div class="event-column-headers" *ngIf="futureEvents().length">
+      <div class="event-column-headers" *ngIf="futureEvents()?.length">
         <span class="event-column-header">Nr</span>
         <span class="event-column-header">Ürituse nimi</span>
         <span class="event-column-header">Kuupäev</span>
@@ -17,13 +17,15 @@
         <li *ngFor="let event of futureEvents(); let i = index; trackBy: trackById">
           <div class="event-title-container">
             <span class="event-number">{{ i + 1 }}.</span>
-            <a class="event-title" [routerLink]="['/events', event.id]" title="Vaata ürituse {{ event.name }} osavõtjaid">{{ event.name }}</a>
+            <a class="event-title" [routerLink]="['/events', event.id]"
+               title="Vaata ürituse {{ event.name }} osavõtjaid">{{ event.name }}</a>
           </div>
           <span class="event-date">{{ event.dateTime | date: 'dd.MM.yyyy' }}</span>
           <span class="event-location">{{ event.location }}</span>
           <span class="event-participants-count">{{ event.totalParticipants }}</span>
           <div class="event-actions">
-            <button [routerLink]="['/events', event.id, 'new']" class="add-participant-button" title="Lisa osavõtja üritusele {{ event.name }}">
+            <button [routerLink]="['/events', event.id, 'new']" class="add-participant-button"
+                    title="Lisa osavõtja üritusele {{ event.name }}">
               <img ngSrc="/add.svg" alt="" class="add-participant-icon" height="800" width="800"/>
             </button>
             <button (click)="openDeleteModal(event)" class="delete-button" title="Kustuta üritus {{ event.name }}">
@@ -31,7 +33,7 @@
             </button>
           </div>
         </li>
-        <li *ngIf="!futureEvents().length" class="empty-message">Tulevasi üritusi pole</li>
+        <li *ngIf="!futureEvents()?.length" class="empty-message">Tulevasi üritusi pole</li>
       </ul>
 
       <a routerLink="/events/new" class="uppercase-link add-event-link">Lisa üritus</a>
@@ -40,7 +42,7 @@
     <!-- Toimunud üritused (RIGHT) -->
     <div class="event-card">
       <div class="event-section-header">Toimunud üritused</div>
-      <div class="event-column-headers" *ngIf="pastEvents().length">
+      <div class="event-column-headers" *ngIf="pastEvents()?.length">
         <span class="event-column-header">Nr</span>
         <span class="event-column-header">Ürituse nimi</span>
         <span class="event-column-header">Kuupäev</span>
@@ -52,25 +54,35 @@
         <li *ngFor="let event of pastEvents(); let i = index; trackBy: trackById">
           <div class="event-title-container">
             <span class="event-number">{{ i + 1 }}.</span>
-            <a class="event-title" [routerLink]="['/events', event.id, 'participants']" title="Vaata toimunud ürituse {{ event.name }} osavõtjaid">{{ event.name }}</a>
+            <a class="event-title" [routerLink]="['/events', event.id, 'participants']"
+               title="Vaata toimunud ürituse {{ event.name }} osavõtjaid">{{ event.name }}</a>
           </div>
           <span class="event-date">{{ event.dateTime | date: 'dd.MM.yyyy' }}</span>
           <span class="event-location">{{ event.location }}</span>
           <span class="event-participants-count">{{ event.totalParticipants }}</span>
           <div class="event-actions">
-            <button [routerLink]="['/events', event.id, 'new']" class="add-participant-button" title="Lisa osavõtja toimunud üritusele {{ event.name }}">
+            <button [routerLink]="['/events', event.id, 'new']" class="add-participant-button"
+                    title="Lisa osavõtja toimunud üritusele {{ event.name }}">
               <img ngSrc="/add.svg" alt="" class="add-participant-icon" height="800" width="800"/>
             </button>
           </div>
         </li>
-        <li *ngIf="!pastEvents().length" class="empty-message">Toimunud üritusi pole</li>
+        <li *ngIf="!pastEvents()?.length" class="empty-message">Toimunud üritusi pole</li>
       </ul>
     </div>
   </div>
 
-  <!-- Modal for delete confirmation -->
-  <div *ngIf="eventToDelete" class="modal-overlay" (keydown)="handleModalKeydown($event)">
-    <div class="modal-dialog" role="dialog" aria-labelledby="modal-title">
+  <div
+    *ngIf="eventToDelete"
+    class="modal-overlay"
+    #overlay
+  >
+    <div
+      #dialog
+      class="modal-dialog"
+      role="dialog"
+      aria-labelledby="modal-title"
+    >
       <div class="modal-header">
         <h3 id="modal-title">Kinnita kustutamine</h3>
       </div>
@@ -78,8 +90,20 @@
         <p>Kas soovite "{{ eventToDelete.name }}" üritust kustutada?</p>
       </div>
       <div class="modal-footer">
-        <button class="modal-button cancel-button" (click)="closeDeleteModal()" aria-label="Loobu kustutamisest">Loobu</button>
-        <button class="modal-button confirm-button" (click)="confirmDelete()" aria-label="Kinnita kustutamine">Jah</button>
+        <button
+          class="modal-button cancel-button"
+          (click)="closeDeleteModal()"
+          aria-label="Loobu kustutamisest"
+        >
+          Loobu
+        </button>
+        <button
+          class="modal-button confirm-button"
+          (click)="confirmDelete()"
+          aria-label="Kinnita kustutamine"
+        >
+          Jah
+        </button>
       </div>
     </div>
   </div>
