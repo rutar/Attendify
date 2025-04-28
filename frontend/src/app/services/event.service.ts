@@ -29,15 +29,18 @@ export class EventService {
   }
 
   // Fetch all events and update signals
-  fetchEvents(): void {
-    this.http
+  fetchEvents(): Observable<void> {
+    return this.http
       .get<{ futureEvents: EventData[]; pastEvents: EventData[] }>(this.eventsApiUrl)
-      .pipe(catchError(this.handleError))
-      .subscribe((data) => {
-        console.log('Fetched events:', data);
-        this.futureEvents.set(data.futureEvents);
-        this.pastEvents.set(data.pastEvents);
-      });
+      .pipe(
+        tap((data) => {
+          console.log('Fetched events:', data);
+          this.futureEvents.set(data.futureEvents);
+          this.pastEvents.set(data.pastEvents);
+        }),
+        map(() => void 0),
+        catchError(this.handleError)
+      );
   }
 
   // Get event details by id (assuming the backend exposes GET /api/events/{id})

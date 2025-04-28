@@ -1,10 +1,9 @@
 <section class="event-list-section">
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
   <div class="event-list-container">
     <!-- Tulevased üritused (LEFT) -->
     <div class="event-card">
       <div class="event-section-header">Tulevased üritused</div>
-      <div *ngIf="error()" class="error-message">{{ error() }}</div>
-
       <div class="event-column-headers" *ngIf="futureEvents()?.length">
         <span class="event-column-header">Nr</span>
         <span class="event-column-header">Ürituse nimi</span>
@@ -72,16 +71,17 @@
     </div>
   </div>
 
+  <!-- MODAL -->
   <div
     *ngIf="eventToDelete"
     class="modal-overlay"
-    #overlay
+    (click)="onOverlayClick($event)"
   >
     <div
-      #dialog
       class="modal-dialog"
       role="dialog"
       aria-labelledby="modal-title"
+      (click)="$event.stopPropagation()"
     >
       <div class="modal-header">
         <h3 id="modal-title">Kinnita kustutamine</h3>

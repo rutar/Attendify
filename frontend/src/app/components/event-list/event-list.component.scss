@@ -52,8 +52,9 @@
 .error-message {
   background-color: #f8d7da;
   color: #721c24;
+  width: 1180px;
   padding: 8px;
-  margin-bottom: 16px;
+  margin: 0 auto 16px auto;
   border: 1px solid #f5c6cb;
   border-radius: 4px;
   text-align: center;
@@ -260,7 +261,6 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  pointer-events: none;
 }
 
 .modal-dialog {

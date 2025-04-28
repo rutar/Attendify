@@ -1,4 +1,4 @@
-import { Component, OnInit, Signal, signal } from '@angular/core';
+import {Component, HostListener, OnInit, Signal, signal} from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { EventData } from '../../models/event.model';
@@ -24,14 +24,18 @@ export class EventListComponent implements OnInit {
   }
 
   private loadEvents(): void {
-    try {
-      this.eventService.fetchEvents();
-      this.futureEvents = this.eventService.getFutureEvents();
-      this.pastEvents = this.eventService.getPastEvents();
-      this.error.set(null);
-    } catch (err) {
-      this.error.set('Ürituste laadimine ebaõnnestus');
-    }
+    this.eventService.fetchEvents().subscribe({
+      next: () => {
+        this.futureEvents = this.eventService.getFutureEvents();
+        this.pastEvents = this.eventService.getPastEvents();
+        console.log("Past events: " + this.pastEvents.name);
+        this.error.set(null);
+      },
+      error: (err) => {
+        console.error('Failed to load events:', err);
+        this.error.set('Ürituste laadimine ebaõnnestus');
+      }
+    });
   }
 
   openDeleteModal(event: EventData): void {
@@ -73,9 +77,14 @@ export class EventListComponent implements OnInit {
     return <number>event.id;
   }
 
-  handleModalKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapePress(event: KeyboardEvent): void {
+    if (this.eventToDelete !== null) {
       this.closeDeleteModal();
     }
+  }
+
+  onOverlayClick(event: MouseEvent): void {
+    this.closeDeleteModal();
   }
 }
