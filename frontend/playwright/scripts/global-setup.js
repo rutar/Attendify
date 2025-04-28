@@ -17,8 +17,8 @@ export async function seedDatabase() {
       ALTER SEQUENCE events_id_seq RESTART WITH 1;
       INSERT INTO events (name, date_time, location, total_participants, status, additional_info)
       VALUES
-        ('Future Conference', '2025-04-26 10:00:00', 'Tallinn', 45, 'upcoming', 'Annual tech conference'),
-        ('Tech Meetup', '2025-04-27 15:00:00', 'Tartu', 20, 'upcoming', ''),
+        ('Future Conference', '2056-04-26 10:00:00', 'Tallinn', 45, 'upcoming', 'Annual tech conference'),
+        ('Tech Meetup', '2056-04-27 15:00:00', 'Tartu', 20, 'upcoming', ''),
         ('Past Workshop', '2025-04-24 12:00:00', 'Pärnu', 30, 'completed', 'Web development workshop')
       RETURNING id;
     `);
