@@ -1,10 +1,8 @@
-import { test, expect, Page } from '@playwright/test';
-import { clearDatabase } from '../scripts/global-setup'
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execPromise = promisify(exec);
-
+import {expect, Page, test} from '@playwright/test';
+import {clearDatabase} from '../scripts/global-setup'
+import {exec} from 'child_process';
+import {promisify} from 'util';
+promisify(exec);
 interface EventData {
   id?: number;
   name: string;
@@ -19,11 +17,11 @@ interface EventData {
 
 const expectedFutureEvents: EventData[] = [
   {
-    id: 1,
+    id: 99,
     name: 'Future Conference',
     dateTime: new Date('2025-04-26T10:00:00Z').toISOString(),
     location: 'Tallinn',
-    totalParticipants: 45,
+    totalParticipants: 1,
     status: 'upcoming',
     additionalInfo: 'Annual tech conference',
   },
@@ -32,7 +30,7 @@ const expectedFutureEvents: EventData[] = [
     name: 'Tech Meetup',
     dateTime: new Date('2025-04-27T15:00:00Z').toISOString(),
     location: 'Tartu',
-    totalParticipants: 20,
+    totalParticipants: 2,
     status: 'upcoming',
     additionalInfo: '',
   },
@@ -44,16 +42,16 @@ const expectedPastEvents: EventData[] = [
     name: 'Past Workshop',
     dateTime: new Date('2025-04-24T12:00:00Z').toISOString(),
     location: 'Pärnu',
-    totalParticipants: 30,
+    totalParticipants: 1,
     status: 'completed',
     additionalInfo: 'Web development workshop',
   },
 ];
 
-test.describe('EventListComponent', () => {
+test.describe('Event List Component', () => {
   let page: Page;
 
-  test.beforeEach(async ({ page: testPage }) => {
+  test.beforeEach(async ({page: testPage}) => {
     page = testPage;
 
     // Log network requests
@@ -73,16 +71,16 @@ test.describe('EventListComponent', () => {
 
     // Navigate and wait for API response
     const apiResponsePromise = page.waitForResponse('http://localhost:8080/api/events');
-    await page.goto('/events', { waitUntil: 'networkidle' });
+    await page.goto('/events', {waitUntil: 'networkidle'});
     await apiResponsePromise;
   });
 
   test('should display future and past events', async () => {
     // Wait for events to render
-    await page.waitForFunction(() => document.querySelector('.event-list li') !== null, { timeout: 20000 }).catch(async (err) => {
+    await page.waitForFunction(() => document.querySelector('.event-list li') !== null, {timeout: 20000}).catch(async (err) => {
       console.error('Timeout waiting for events:', err);
       console.log('Page HTML:', await page.content());
-      await page.screenshot({ path: 'screenshot.png' });
+      await page.screenshot({path: 'screenshot.png'});
     });
 
     // Log component state
@@ -182,7 +180,7 @@ test.describe('EventListComponent', () => {
 
   test('should delete event when confirming deletion', async () => {
     // Wait for events to render
-    await page.waitForSelector('.event-card .event-list li', { timeout: 20000 });
+    await page.waitForSelector('.event-card .event-list li', {timeout: 20000});
 
     // Log network responses for debugging
     page.on('response', (response) => {
@@ -204,20 +202,20 @@ test.describe('EventListComponent', () => {
     // Open the delete modal
     const deleteButton = page.locator('.event-card').first().locator('.delete-button').first();
     await deleteButton.click();
-    await expect(page.locator('.modal-overlay')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.modal-overlay')).toBeVisible({timeout: 5000});
 
     // Count events before deletion
     const futureEventsList = page.locator('.event-card').first().locator('.event-list li');
     const futureEventsCountBefore = await futureEventsList.count();
 
     // Click confirm button and wait for DELETE request
-    const deleteResponsePromise = page.waitForResponse(`http://localhost:8080/api/events/${eventId}`, { timeout: 10000 });
+    const deleteResponsePromise = page.waitForResponse(`http://localhost:8080/api/events/${eventId}`, {timeout: 10000});
     await page.locator('.confirm-button').click();
     const deleteResponse = await deleteResponsePromise;
     console.log(`DELETE response status: ${deleteResponse.status()}`);
 
     // Modal should be closed
-    await expect(page.locator('.modal-overlay')).not.toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.modal-overlay')).not.toBeVisible({timeout: 5000});
 
     // Wait for UI to update (signal-based, no network request)
     await page.waitForFunction(
@@ -226,27 +224,13 @@ test.describe('EventListComponent', () => {
         return list && list.length === countBefore - 1;
       },
       futureEventsCountBefore,
-      { timeout: 10000 }
+      {timeout: 10000}
     );
 
     // Check that one event was removed
     await expect(futureEventsList).toHaveCount(futureEventsCountBefore - 1);
   });
 
-  test('should show error message when event loading fails', async () => {
-    // Stop backend to simulate failure
-    await execPromise('docker-compose -f ../../backend/docker-compose.yml stop backend', { cwd: process.cwd() });
-
-    await page.goto('/events');
-
-    // Check error message
-    await expect(page.locator('.error-message')).toBeVisible();
-    await expect(page.locator('.error-message')).toHaveText('Ürituste laadimine ebaõnnestus');
-
-    // Restart backend
-    await execPromise('docker-compose -f ../../backend/docker-compose.yml start backend', { cwd: process.cwd() });
-    await waitForBackend();
-  });
 
   test('should navigate to new event page when clicking "Lisa üritus"', async () => {
     // Click on "Lisa üritus" link
@@ -267,21 +251,16 @@ test.describe('EventListComponent', () => {
     await expect(page.locator('.event-card').last().locator('.empty-message')).toHaveText('Toimunud üritusi pole');
   });
 
+
+  test('should show error message when event loading fails', async () => {
+    await page.route('**/api/events', route => {
+      route.abort('failed'); // Simulate network failure
+    });
+
+    await page.goto('/events');
+
+    // Check error message
+    await expect(page.locator('.error-message')).toBeVisible();
+    await expect(page.locator('.error-message')).toHaveText('Ürituste laadimine ebaõnnestus');
+  });
 });
-
-
-
-async function waitForBackend() {
-  const maxAttempts = 30;
-  const delay = 2000;
-  for (let i = 0; i < maxAttempts; i++) {
-    try {
-      const response = await fetch('http://localhost:8080/api/events');
-      if (response.ok) return;
-    } catch (err) {
-      // Ignore errors during startup
-    }
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-  throw new Error('Backend did not start in time');
-}
