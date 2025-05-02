@@ -42,7 +42,7 @@ export class ParticipantDetailComponent implements OnInit {
       personalCode: ['', Validators.required],
       companyName: [''],
       registrationCode: [''],
-      participantCount: [null],
+      participantCount: [null, [Validators.min(1)]],
       contactPerson: [''],
       paymentMethod: [null, Validators.required],
       email: [''],
@@ -95,6 +95,7 @@ export class ParticipantDetailComponent implements OnInit {
     const personalCode = this.participantForm.get('personalCode');
     const companyName = this.participantForm.get('companyName');
     const registrationCode = this.participantForm.get('registrationCode');
+    const participantCount = this.participantForm.get('participantCount');
 
     if (type === 'PERSON') {
       firstName?.setValidators(Validators.required);
@@ -102,12 +103,21 @@ export class ParticipantDetailComponent implements OnInit {
       personalCode?.setValidators(Validators.required);
       companyName?.clearValidators();
       registrationCode?.clearValidators();
+      participantCount?.clearValidators();
     } else if (type === 'COMPANY') {
       firstName?.clearValidators();
       lastName?.clearValidators();
       personalCode?.clearValidators();
       companyName?.setValidators(Validators.required);
       registrationCode?.setValidators(Validators.required);
+      participantCount?.setValidators([Validators.required, Validators.min(1)]);
+    } else {
+      firstName?.clearValidators();
+      lastName?.clearValidators();
+      personalCode?.clearValidators();
+      companyName?.clearValidators();
+      registrationCode?.clearValidators();
+      participantCount?.clearValidators();
     }
 
     firstName?.updateValueAndValidity();
@@ -115,6 +125,7 @@ export class ParticipantDetailComponent implements OnInit {
     personalCode?.updateValueAndValidity();
     companyName?.updateValueAndValidity();
     registrationCode?.updateValueAndValidity();
+    participantCount?.updateValueAndValidity();
   }
 
   onSubmit(): void {
@@ -148,12 +159,10 @@ export class ParticipantDetailComponent implements OnInit {
     });
   }
 
-
   private getEventId(): string | null {
-    // Traverse pathFromRoot to find the route with event_id
     for (const snapshot of this.route.snapshot.pathFromRoot) {
       if (snapshot.paramMap.has('id') && snapshot.routeConfig?.path?.includes('events/:id')) {
-        return snapshot.paramMap.get('id'); // 'id' here is event_id from /events/:id
+        return snapshot.paramMap.get('id');
       }
     }
     return null;
@@ -161,24 +170,12 @@ export class ParticipantDetailComponent implements OnInit {
 
   goBack(): void {
     const eventId = this.getEventId();
-    console.log('Retrieved event_id:', eventId); // Debug
+    console.log('Retrieved event_id:', eventId);
     if (eventId) {
       this.router.navigate([`/events/${eventId}/participants`]);
     } else {
       console.warn('No event_id found, navigating to /events');
       this.router.navigate(['/events']);
     }
-  }
-
-  logRouteHierarchy(): void {
-    const pathFromRoot = this.route.snapshot.pathFromRoot;
-    console.log('Route Hierarchy:');
-    pathFromRoot.forEach((snapshot, index) => {
-      console.log(`Level ${index}:`, {
-        url: snapshot.url.map(segment => segment.path).join('/'),
-        params: snapshot.paramMap.keys.length ? snapshot.paramMap : 'No params',
-        routeConfig: snapshot.routeConfig ? snapshot.routeConfig.path : 'No route config'
-      });
-    });
   }
 }

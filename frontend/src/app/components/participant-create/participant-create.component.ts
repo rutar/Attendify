@@ -64,7 +64,7 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
       personalCode: ['', Validators.required],
       companyName: [''],
       registrationCode: [''],
-      participantCount: [null],
+      participantCount: [null, [Validators.min(1)]],
       contactPerson: [''],
       paymentMethod: [null, Validators.required],
       email: [''],
@@ -93,7 +93,6 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
 
     updateParticipantValidators(this.participantForm, 'PERSON');
 
-    // Setup autocomplete for firstName
     this.filteredFirstNameOptions = this.participantForm.get('firstName')!.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -105,7 +104,6 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Setup autocomplete for lastName
     this.filteredLastNameOptions = this.participantForm.get('lastName')!.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -117,17 +115,16 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Setup autocomplete for companyName
     this.filteredCompanyNameOptions = this.participantForm.get('companyName')!.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(value => {
         if (typeof value === 'string' && value) {
-          console.log('CompanyName query:', value); // Debug query
+          console.log('CompanyName query:', value);
           return this.participantService.searchParticipants(value, 'COMPANY', 'companyName').pipe(
-            tap(participants => console.log('Raw CompanyName participants:', participants)), // Debug raw data
+            tap(participants => console.log('Raw CompanyName participants:', participants)),
             map(participants => participants.filter(p => p.companyName && p.companyName.trim() !== '')),
-            tap(filtered => console.log('Filtered CompanyName participants:', filtered)) // Debug filtered data
+            tap(filtered => console.log('Filtered CompanyName participants:', filtered))
           );
         }
         return of([]);
@@ -135,7 +132,6 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Display function for autocomplete
   displayFn(participant: Participant | string): string {
     if (!participant) {
       return '';
@@ -150,7 +146,6 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
   }
 
   selectParticipant(participant: Participant): void {
-    // Determine participant type
     let participantType: 'PERSON' | 'COMPANY' | null = null;
     if (participant.firstName || participant.lastName) {
       participantType = 'PERSON';
@@ -172,7 +167,6 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
       additionalInfo: participant.additionalInfo
     });
 
-    // Update validators based on type
     updateParticipantValidators(this.participantForm, participantType);
   }
 
@@ -219,7 +213,7 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
             next: () => {
               this.participants.update((parts) => [...parts, newParticipant]);
               this.resetForm();
-              this.router.navigate(['/events']); // Navigate to /events
+              this.router.navigate(['/events']);
             },
             error: (err) => {
               console.error('Failed to add participant to event:', err);
@@ -231,7 +225,6 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Create participant error:', err);
         if (err.status === 409) {
-          // Participant already exists, search for it
           const searchField = formValue.type === 'PERSON' ? 'personalCode' : 'registrationCode';
           const searchValue = formValue.type === 'PERSON' ? formValue.personalCode : formValue.registrationCode;
 
@@ -255,7 +248,6 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
                 return;
               }
 
-              // Try to add existing participant to event
               this.eventService.addParticipantToEvent(+eventId, {
                 id: existingParticipant.id,
                 type: existingParticipant.type
@@ -263,7 +255,7 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
                 next: () => {
                   this.participants.update((parts) => [...parts, existingParticipant]);
                   this.resetForm();
-                  this.router.navigate(['/events']); // Navigate to /events
+                  this.router.navigate(['/events']);
                 },
                 error: (eventErr) => {
                   console.error('Failed to add existing participant to event:', eventErr);

@@ -19,7 +19,6 @@
         <div class="form-row">
           <label for="firstName">Eesnimi:</label>
           <div class="input-container">
-            <!-- Angular Material Autocomplete for FirstName -->
             <mat-form-field class="full-width">
               <input
                 type="text"
@@ -46,7 +45,6 @@
         <div class="form-row">
           <label for="lastName">Perenimi:</label>
           <div class="input-container">
-            <!-- Angular Material Autocomplete for LastName -->
             <mat-form-field class="full-width">
               <input
                 type="text"
@@ -89,7 +87,6 @@
         <div class="form-row">
           <label for="companyName">Ettevõtte nimi:</label>
           <div class="input-container">
-            <!-- Angular Material Autocomplete for CompanyName -->
             <mat-form-field class="full-width">
               <input
                 type="text"
@@ -123,6 +120,21 @@
             />
             <div class="error-msg" *ngIf="participantForm.get('registrationCode')?.invalid && participantForm.get('registrationCode')?.touched">
               Registrikood on kohustuslik
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="participantCount">Osalejate arv:</label>
+          <div class="input-container">
+            <input
+              type="number"
+              id="participantCount"
+              formControlName="participantCount"
+              [class.is-invalid]="participantForm.get('participantCount')?.invalid && participantForm.get('participantCount')?.touched"
+            />
+            <div class="error-msg" *ngIf="participantForm.get('participantCount')?.invalid && participantForm.get('participantCount')?.touched">
+              Osalejate arv on kohustuslik ja peab olema positiivne number
             </div>
           </div>
         </div>
