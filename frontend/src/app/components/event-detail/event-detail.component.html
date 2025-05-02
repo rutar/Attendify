@@ -48,11 +48,9 @@
             </div>
 
             <div class="participant-col actions">
-              <a
-                href="#"
-                (click)="deleteParticipant(p.id!); $event.preventDefault();"
-                class="uppercase-link add-event-link"
-              >KUSTUTA</a>
+              <button (click)="openDeleteModal(p)" class="delete-button" title="Kustuta osavõtja">
+                <img ngSrc="/remove.svg" alt="Kustuta" class="delete-icon" height="32" width="32"/>
+              </button>
             </div>
 
           </div>
@@ -66,7 +64,42 @@
         <a routerLink="/events" class="btn-grey">Tagasi</a>
       </div>
 
-
+    <!-- MODAL -->
+    <div
+      *ngIf="participantToDelete"
+      class="modal-overlay"
+      (click)="onOverlayClick($event)"
+    >
+      <div
+        class="modal-dialog"
+        role="dialog"
+        aria-labelledby="modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="modal-header">
+          <h3 id="modal-title">Kinnita kustutamine</h3>
+        </div>
+        <div class="modal-body">
+          <p>Kas soovite osavõtja "{{ participantToDelete.type === 'PERSON' ? participantToDelete.firstName + ' ' + participantToDelete.lastName : participantToDelete.companyName || 'Nimetu ettevõte' }}" kustutada?</p>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="modal-button cancel-button"
+            (click)="closeDeleteModal()"
+            aria-label="Loobu kustutamisest"
+          >
+            Loobu
+          </button>
+          <button
+            class="modal-button confirm-button"
+            (click)="confirmDelete()"
+            aria-label="Kinnita kustutamine"
+          >
+            Jah
+          </button>
+        </div>
+      </div>
+    </div>
 
   </div>
 </div>

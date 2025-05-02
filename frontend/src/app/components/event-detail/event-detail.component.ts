@@ -1,17 +1,17 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, HostListener } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ParticipantService } from '../../services/participant.service';
 import { EventService } from '../../services/event.service';
 import { EventData } from '../../models/event.model';
 import { Participant } from '../../models/participant.model';
-import {updateParticipantValidators} from '../../utils/form-utils';
+import { updateParticipantValidators } from '../../utils/form-utils';
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, NgOptimizedImage],
   templateUrl: './event-detail.component.html',
   styleUrls: ['./event-detail.component.scss'],
 })
@@ -20,6 +20,7 @@ export class EventDetailComponent implements OnInit {
   participants = signal<Participant[]>([]);
   participantForm: FormGroup;
   error = signal<string | null>(null);
+  participantToDelete: Participant | null = null;
 
   private errorMessages: ErrorMessages = {
     event_load_failed: 'Ürituse andmete laadimine ebaõnnestus',
@@ -121,6 +122,21 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  openDeleteModal(participant: Participant): void {
+    this.participantToDelete = participant;
+  }
+
+  closeDeleteModal(): void {
+    this.participantToDelete = null;
+  }
+
+  confirmDelete(): void {
+    if (this.participantToDelete && this.participantToDelete.id !== undefined) {
+      this.deleteParticipant(this.participantToDelete.id);
+      this.participantToDelete = null;
+    }
+  }
+
   deleteParticipant(participantId: number): void {
     const eventId = this.route.snapshot.paramMap.get('id');
     if (eventId) {
@@ -157,12 +173,23 @@ export class EventDetailComponent implements OnInit {
       phone: '',
       additionalInfo: ''
     });
-    updateParticipantValidators(this.participantForm,'PERSON');
+    updateParticipantValidators(this.participantForm, 'PERSON');
     this.error.set(null);
   }
 
   trackById(index: number, participant: Participant): number {
     return participant.id ?? index;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapePress(event: KeyboardEvent): void {
+    if (this.participantToDelete !== null) {
+      this.closeDeleteModal();
+    }
+  }
+
+  onOverlayClick(event: MouseEvent): void {
+    this.closeDeleteModal();
   }
 }
 
