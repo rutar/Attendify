@@ -1,39 +1,67 @@
-<div class="event-create-wrapper">
-  <div class="form-shell">
-    <h2 class="form-title">Ürituse lisamine</h2>
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h2>Ürituse lisamine</h2>
+    </div>
+    <div class="card-body">
+      <form (ngSubmit)="save()" novalidate>
+        <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
-    <form (ngSubmit)="save()" novalidate>
-      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+        <div class="form-row">
+          <label for="name">Ürituse nimi:</label>
+          <input
+            id="name"
+            type="text"
+            [(ngModel)]="event.name"
+            name="name"
+            required
+            [class.is-invalid]="submitted && !event.name"
+          />
+          <div *ngIf="submitted && !event.name" class="error-msg">Ürituse nimi on kohustuslik</div>
+        </div>
 
-      <div class="form-row">
-        <label for="name">Ürituse nimi:</label>
-        <input id="name" type="text" [(ngModel)]="event.name" name="name" required />
-      </div>
-      <div *ngIf="submitted && !event.name" class="error-msg">Ürituse nimi on kohustuslik</div>
+        <div class="form-row">
+          <label for="dateTime">Toimumisaeg:</label>
+          <input
+            id="dateTime"
+            type="datetime-local"
+            [(ngModel)]="event.dateTime"
+            name="dateTime"
+            required
+            [class.is-invalid]="submitted && (!event.dateTime || isPastDate())"
+          />
+          <div *ngIf="submitted && !event.dateTime" class="error-msg">Toimumisaeg on kohustuslik</div>
+          <div *ngIf="submitted && event.dateTime && isPastDate()" class="error-msg">Toimumisaeg ei tohi olla minevikus</div>
+        </div>
 
-      <div class="form-row">
-        <label for="dateTime">Toimumisaeg:</label>
-        <input id="dateTime" type="datetime-local" [(ngModel)]="event.dateTime" name="dateTime" required placeholder="pp.kk.aaaa hh:mm" />
-      </div>
-      <div *ngIf="submitted && !event.dateTime" class="error-msg">Toimumisaeg on kohustuslik</div>
-      <div *ngIf="submitted && event.dateTime && isPastDate()" class="error-msg">Toimumisaeg ei tohi olla minevikus</div>
+        <div class="form-row">
+          <label for="location">Koht:</label>
+          <input
+            id="location"
+            type="text"
+            [(ngModel)]="event.location"
+            name="location"
+            required
+            [class.is-invalid]="submitted && !event.location"
+          />
+          <div *ngIf="submitted && !event.location" class="error-msg">Koht on kohustuslik</div>
+        </div>
 
-      <div class="form-row">
-        <label for="location">Koht:</label>
-        <input id="location" type="text" [(ngModel)]="event.location" name="location" required />
-      </div>
-      <div *ngIf="submitted && !event.location" class="error-msg">Koht on kohustuslik</div>
+        <div class="form-row">
+          <label for="additionalInfo">Lisainfo:</label>
+          <textarea
+            id="additionalInfo"
+            rows="2"
+            [(ngModel)]="event.additionalInfo"
+            name="additionalInfo"
+          ></textarea>
+        </div>
 
-      <div class="form-row">
-        <label for="additionalInfo">Lisainfo:</label>
-        <textarea id="additionalInfo" rows="2" [(ngModel)]="event.additionalInfo" name="additionalInfo"></textarea>
-      </div>
-
-      <div class="form-actions">
-        <a routerLink="/events" class="btn-grey">Tagasi</a>
-        <button type="submit" class="btn-blue">Lisa</button>
-      </div>
-
-    </form>
+        <div class="form-actions">
+          <a routerLink="/events" class="btn-grey">Tagasi</a>
+          <button type="submit" class="btn-blue">Lisa</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
