@@ -143,7 +143,7 @@ export class ParticipantDetailComponent implements OnInit {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     participant.id = id;
     this.participantService.updateParticipant(id, participant).subscribe({
-      next: () => this.router.navigate(['/participants']),
+      next: () => this.router.navigate(['/events']),
       error: () => this.error.set(this.errorMessages.participant_save_failed)
     });
   }
