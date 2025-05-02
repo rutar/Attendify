@@ -1,8 +1,6 @@
 import { FormGroup, Validators } from '@angular/forms';
 
 export function updateParticipantValidators(form: FormGroup, type: 'PERSON' | 'COMPANY'| null): void {
-  console.log('Updating validators for type:', type);
-  console.log('Current companyName validator:',  form.get('companyName')?.validator);
 
   // Väljade nimekirjad eraisiku ja ettevõtte jaoks
   const personControls = ['firstName', 'lastName', 'personalCode'];

@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import {catchError, map, tap} from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { Participant } from '../models/participant.model';
 import { ConfigService } from './config.service';
 
@@ -46,12 +46,25 @@ export class ParticipantService {
     );
   }
 
-  searchParticipants(query: string): Observable<Participant[]> {
-    const url = `${this.configService.getApiBaseUrl()}/participants${
-      query ? `?query=${encodeURIComponent(query)}` : ''
-    }`;
+  searchParticipants(query: string, type?: string, field?: string): Observable<Participant[]> {
+    let url = `${this.configService.getApiBaseUrl()}/participants`;
+    const queryParams: string[] = [];
 
-    console.log(url);
+    if (query) {
+      queryParams.push(`query=${encodeURIComponent(query)}`);
+    }
+    if (type) {
+      queryParams.push(`type=${encodeURIComponent(type)}`);
+    }
+    if (field) {
+      queryParams.push(`field=${encodeURIComponent(field)}`);
+    }
+
+    if (queryParams.length > 0) {
+      url += `?${queryParams.join('&')}`;
+    }
+
+    console.log('Search URL:', url);
     return this.http.get<{ content: Participant[] }>(url).pipe(
       map((response) => {
         // Extract content array, ensure it's an array

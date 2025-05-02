@@ -4,26 +4,13 @@
     <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
     <form [formGroup]="participantForm" (ngSubmit)="addParticipant()">
 
-
       <div class="mb-2 offset-md-3">
         <div class="form-check form-check-inline radio-buttons">
-          <input
-            class="form-check-input"
-            type="radio"
-            formControlName="type"
-            value="PERSON"
-            id="personType"
-          />
+          <input class="form-check-input" type="radio" formControlName="type" value="PERSON" id="personType" />
           <label class="form-check-label" for="personType">Eraisik</label>
         </div>
         <div class="form-check form-check-inline radio-buttons">
-          <input
-            class="form-check-input"
-            type="radio"
-            formControlName="type"
-            value="COMPANY"
-            id="companyType"
-          />
+          <input class="form-check-input" type="radio" formControlName="type" value="COMPANY" id="companyType" />
           <label class="form-check-label" for="companyType">Ettevõte</label>
         </div>
       </div>
@@ -31,41 +18,69 @@
       <div *ngIf="participantForm.get('type')?.value === 'PERSON'" class="mb-0">
         <div class="form-row">
           <label for="firstName">Eesnimi:</label>
-          <input
-            id="firstName"
-            formControlName="firstName"
-            [class.is-invalid]="participantForm.get('firstName')?.invalid && participantForm.get('firstName')?.touched"
-          />
-          <div class="error-msg"
-               *ngIf="participantForm.get('firstName')?.invalid && participantForm.get('firstName')?.touched">
-            Eesnimi on kohustuslik
+          <div class="input-container">
+            <!-- Angular Material Autocomplete for FirstName -->
+            <mat-form-field class="full-width">
+              <input
+                type="text"
+                id="firstName"
+                matInput
+                formControlName="firstName"
+                [matAutocomplete]="autoFirstName"
+                [class.is-invalid]="participantForm.get('firstName')?.invalid && participantForm.get('firstName')?.touched">
+              <mat-autocomplete #autoFirstName="matAutocomplete" [displayWith]="displayFn" (optionSelected)="selectParticipant($event.option.value)">
+                <mat-option *ngFor="let participant of filteredFirstNameOptions | async" [value]="participant">
+                  {{ participant.firstName }} {{ participant.lastName }}<span *ngIf="participant.personalCode"> ({{ participant.personalCode }})</span>
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <div
+              class="error-msg"
+              *ngIf="participantForm.get('firstName')?.invalid && participantForm.get('firstName')?.touched"
+            >
+              Eesnimi on kohustuslik
+            </div>
           </div>
         </div>
 
         <div class="form-row">
           <label for="lastName">Perenimi:</label>
-          <input
-            id="lastName"
-            formControlName="lastName"
-
-            [class.is-invalid]="participantForm.get('lastName')?.invalid && participantForm.get('lastName')?.touched"
-          />
-          <div class="error-msg"
-               *ngIf="participantForm.get('lastName')?.invalid && participantForm.get('lastName')?.touched">
-            Perekonnanimi on kohustuslik
+          <div class="input-container">
+            <!-- Angular Material Autocomplete for LastName -->
+            <mat-form-field class="full-width">
+              <input
+                type="text"
+                id="lastName"
+                matInput
+                formControlName="lastName"
+                [matAutocomplete]="autoLastName"
+                [class.is-invalid]="participantForm.get('lastName')?.invalid && participantForm.get('lastName')?.touched"/>
+              <mat-autocomplete #autoLastName="matAutocomplete" [displayWith]="displayFn" (optionSelected)="selectParticipant($event.option.value)">
+                <mat-option *ngFor="let participant of filteredLastNameOptions | async" [value]="participant">
+                  {{ participant.firstName }} {{ participant.lastName }}<span *ngIf="participant.personalCode"> ({{ participant.personalCode }})</span>
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <div
+              class="error-msg"
+              *ngIf="participantForm.get('lastName')?.invalid && participantForm.get('lastName')?.touched"
+            >
+              Perekonnanimi on kohustuslik
+            </div>
           </div>
         </div>
+
         <div class="form-row">
           <label for="personalCode">Isikukood:</label>
-          <input
-            id="personalCode"
-            formControlName="personalCode"
-
-            [class.is-invalid]="participantForm.get('personalCode')?.invalid && participantForm.get('personalCode')?.touched"
-          />
-          <div class="error-msg"
-               *ngIf="participantForm.get('personalCode')?.invalid && participantForm.get('personalCode')?.touched">
-            Isikukood on kohustuslik
+          <div class="input-container">
+            <input
+              id="personalCode"
+              formControlName="personalCode"
+              [class.is-invalid]="participantForm.get('personalCode')?.invalid && participantForm.get('personalCode')?.touched"
+            />
+            <div class="error-msg" *ngIf="participantForm.get('personalCode')?.invalid && participantForm.get('personalCode')?.touched">
+              Isikukood on kohustuslik
+            </div>
           </div>
         </div>
       </div>
@@ -73,71 +88,76 @@
       <div *ngIf="participantForm.get('type')?.value === 'COMPANY'">
         <div class="form-row">
           <label for="companyName">Ettevõtte nimi:</label>
-          <input
-            id="companyName"
-            formControlName="companyName"
-            [class.is-invalid]="participantForm.get('companyName')?.invalid && participantForm.get('companyName')?.touched"
-          />
-          <div
-            class="error-msg"
-            *ngIf="participantForm.get('companyName')?.invalid && participantForm.get('companyName')?.touched"
-          >
-            Ettevõtte nimi on kohustuslik
+          <div class="input-container">
+            <!-- Angular Material Autocomplete for CompanyName -->
+            <mat-form-field class="full-width">
+              <input
+                type="text"
+                id="companyName"
+                matInput
+                formControlName="companyName"
+                [matAutocomplete]="autoCompanyName"
+                [class.is-invalid]="participantForm.get('companyName')?.invalid && participantForm.get('companyName')?.touched">
+              <mat-autocomplete #autoCompanyName="matAutocomplete" [displayWith]="displayFn" (optionSelected)="selectParticipant($event.option.value)">
+                <mat-option *ngFor="let participant of filteredCompanyNameOptions | async" [value]="participant">
+                  {{ participant.companyName }}<span *ngIf="participant.registrationCode"> ({{ participant.registrationCode }})</span>
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <div
+              class="error-msg"
+              *ngIf="participantForm.get('companyName')?.invalid && participantForm.get('companyName')?.touched"
+            >
+              Ettevõtte nimi on kohustuslik
+            </div>
           </div>
         </div>
 
         <div class="form-row">
           <label for="registrationCode">Registrikood:</label>
-          <input
-            id="registrationCode"
-            formControlName="registrationCode"
-            [class.is-invalid]="participantForm.get('registrationCode')?.invalid && participantForm.get('registrationCode')?.touched"
-          />
-          <div
-            class="error-msg"
-            *ngIf="participantForm.get('registrationCode')?.invalid && participantForm.get('registrationCode')?.touched"
-          >
-            Registrikood on kohustuslik
+          <div class="input-container">
+            <input
+              id="registrationCode"
+              formControlName="registrationCode"
+              [class.is-invalid]="participantForm.get('registrationCode')?.invalid && participantForm.get('registrationCode')?.touched"
+            />
+            <div class="error-msg" *ngIf="participantForm.get('registrationCode')?.invalid && participantForm.get('registrationCode')?.touched">
+              Registrikood on kohustuslik
+            </div>
           </div>
         </div>
       </div>
 
       <div class="form-row">
         <label for="paymentMethod">Maksmisviis</label>
-        <select
-          id="paymentMethod"
-          formControlName="paymentMethod"
-          [class.is-invalid]="participantForm.get('paymentMethod')?.invalid && participantForm.get('paymentMethod')?.touched"
-        >
-          <option [ngValue]="null"></option>
-          <option value="CARD">Kaart</option>
-          <option value="BANK_TRANSFER">Pangaülekanne</option>
-          <option value="CASH">Sularaha</option>
-        </select>
-
-        <div class="error-msg"
-             *ngIf="participantForm.get('paymentMethod')?.invalid && participantForm.get('paymentMethod')?.touched">
-          Maksmisviis on kohustuslik
+        <div class="input-container">
+          <select
+            id="paymentMethod"
+            formControlName="paymentMethod"
+            [class.is-invalid]="participantForm.get('paymentMethod')?.invalid && participantForm.get('paymentMethod')?.touched"
+          >
+            <option [ngValue]="null"></option>
+            <option value="CARD">Kaart</option>
+            <option value="BANK_TRANSFER">Pangaülekanne</option>
+            <option value="CASH">Sularaha</option>
+          </select>
+          <div class="error-msg" *ngIf="participantForm.get('paymentMethod')?.invalid && participantForm.get('paymentMethod')?.touched">
+            Maksmisviis on kohustuslik
+          </div>
         </div>
       </div>
 
-
       <div class="form-row">
         <label for="additionalInfo">Lisainfo:</label>
-        <textarea
-          id="additionalInfo"
-          formControlName="additionalInfo"
-
-        ></textarea>
+        <div class="input-container">
+          <textarea id="additionalInfo" formControlName="additionalInfo"></textarea>
+        </div>
       </div>
-
 
       <div class="form-actions">
         <a routerLink="/events" class="btn-grey">Tagasi</a>
         <button type="submit" class="btn-blue">Salvesta</button>
       </div>
-
     </form>
-
   </div>
 </div>
