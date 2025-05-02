@@ -84,8 +84,8 @@
 }
 
 .event-column-header:nth-child(1) { width: 65px; } /* Nr */
-.event-column-header:nth-child(2) { width: 125px; } /* Ürituse nimi */
-.event-column-header:nth-child(3) { width: 85px; margin-left: 10px; } /* Kuupäev */
+.event-column-header:nth-child(2) { width: 130px; } /* Ürituse nimi */
+.event-column-header:nth-child(3) { width: 90px; margin-left: 10px; } /* Kuupäev */
 .event-column-header:nth-child(4) { width: 100px; margin-left: 10px; } /* Asukoht */
 .event-column-header:nth-child(5) { width: 20px; margin-left: 10px; } /* Osalejate arv */
 
@@ -146,9 +146,9 @@
 }
 
 .event-participants-count {
-  width: 20px;
+  width: 50px;
   text-align: left;
-  margin-left: 10px;
+
   color: #707070;
   font-size: 14px;
   font-family: 'Open Sans', sans-serif;
@@ -157,9 +157,9 @@
 
 .event-actions {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  width: 80px;
+  align-items: flex-end;
+  gap: 5px;
+  width: 40px;
   margin-left: 10px;
 }
 
@@ -356,14 +356,6 @@
   .event-location {
     width: 100px;
   }
-
-  .event-participants-count {
-    width: 35px;
-  }
-
-  .event-actions {
-    width: 60px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -377,10 +369,6 @@
     width: 100%;
   }
 
-  .event-title-container {
-    width: 200px;
-  }
-
   .event-date {
     width: 80px;
   }
@@ -389,13 +377,6 @@
     width: 120px;
   }
 
-  .event-participants-count {
-    width: 40px;
-  }
-
-  .event-actions {
-    width: 80px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -429,17 +410,6 @@
   .event-location {
     font-size: 13px;
     width: 100px;
-    margin-left: 8px;
-  }
-
-  .event-participants-count {
-    font-size: 13px;
-    width: 35px;
-    margin-left: 8px;
-  }
-
-  .event-actions {
-    width: 60px;
     margin-left: 8px;
   }
 
