@@ -5,6 +5,7 @@ import com.attendify.backend.domain.EventParticipant;
 import com.attendify.backend.domain.EventParticipant.AttendanceStatus;
 import com.attendify.backend.domain.Participant;
 import com.attendify.backend.dto.ParticipantDTO;
+import com.attendify.backend.exception.DuplicateResourceException;
 import com.attendify.backend.repository.EventParticipantRepository;
 import com.attendify.backend.repository.EventRepository;
 import com.attendify.backend.repository.ParticipantRepository;
@@ -31,7 +32,7 @@ public class EventParticipantServiceImpl implements EventParticipantService {
 
         boolean alreadyRegistered = eventParticipantRepository.existsByEventAndParticipant(event, participant);
         if (alreadyRegistered) {
-            throw new IllegalStateException("Participant already registered to event");
+            throw new DuplicateResourceException("Participant already registered to event");
         }
 
         EventParticipant eventParticipant = new EventParticipant();

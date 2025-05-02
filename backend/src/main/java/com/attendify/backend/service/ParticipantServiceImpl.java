@@ -56,17 +56,14 @@ public class ParticipantServiceImpl implements ParticipantService {
     public Participant updateParticipant(Long id, Participant participantDetails) {
         Participant participant = getParticipantById(id);
 
-        // Проверяем, что тип участника совпадает
         if (participant.getClass() != participantDetails.getClass()) {
             throw new IllegalArgumentException("Participant type mismatch: cannot update " + participant.getClass().getSimpleName() +
                     " with " + participantDetails.getClass().getSimpleName());
         }
 
-        // Обновляем общие поля
         participant.setPaymentMethod(participantDetails.getPaymentMethod());
         participant.setAdditionalInfo(participantDetails.getAdditionalInfo());
 
-        // Обновляем специфичные поля и проверяем уникальность
         if (participant instanceof Person person && participantDetails instanceof Person personDetails) {
             if (!person.getPersonalCode().equals(personDetails.getPersonalCode()) &&
                     participantRepository.existsByPersonalCode(personDetails.getPersonalCode())) {
@@ -97,18 +94,26 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     @Override
-    public Page<Participant> searchParticipants(String query, Pageable pageable) {
-        return participantRepository.searchParticipants(query, pageable);
+    public Page<Participant> searchParticipants(String query, String type, String field, Pageable pageable) {
+        if (query == null || query.isEmpty()) {
+            return participantRepository.findAll(pageable);
+        }
+
+        type = type == null ? "" : type.toLowerCase();
+        field = field == null ? "" : field.toLowerCase();
+
+        return switch (type) {
+            case "person" -> participantRepository.searchPersonsByField(query, field, pageable);
+            case "company" -> participantRepository.searchCompaniesByField(query, field, pageable);
+            default -> participantRepository.searchParticipantsByField(query, field, pageable);
+        };
     }
 
-
     void validateEstonianPersonalCode(String personalCode) {
-        // Validation of Estonian personal code
         if (!personalCode.matches("^[0-6]\\d{10}$")) {
             throw new IllegalArgumentException("Invalid Estonian personal code format");
         }
 
-        // Additional validation: Checksum verification for Estonian personal code
         int[] weights1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 1};
         int[] weights2 = {3, 4, 5, 6, 7, 8, 9, 1, 2, 3};
         int sum = 0;
@@ -132,7 +137,7 @@ public class ParticipantServiceImpl implements ParticipantService {
         }
     }
 
-     void validateRegistrationCode(String registrationCode) {
+    void validateRegistrationCode(String registrationCode) {
         if (!registrationCode.matches("^\\d{8}$")) {
             throw new IllegalArgumentException("Invalid registration code format: must be 8 digits");
         }
