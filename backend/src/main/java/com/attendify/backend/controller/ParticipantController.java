@@ -28,20 +28,21 @@ public class ParticipantController {
     private final ParticipantService participantService;
     private final ParticipantMapper participantMapper;
 
-    @Operation(summary = "Retrieve all participants", description = "Fetches a list of all participants, including both persons and companies.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved participants",
-                    content = @Content(schema = @Schema(implementation = ParticipantDTO.class)))
-    })
     @GetMapping
+    @Operation(summary = "Get participants", description = "Retrieves a paginated list of participants, optionally filtered by query, type, and field.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Participants retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = Participant.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid query parameters")
+    })
     public Page<Participant> getParticipants(
             @RequestParam(required = false) String query,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String field,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return query == null || query.isEmpty()
-                ? participantService.getAllParticipants(pageable)
-                : participantService.searchParticipants(query, pageable);
+        return participantService.searchParticipants(query, type, field, pageable);
     }
 
     @Operation(summary = "Create a new participant", description = "Creates a new participant (person or company) with the provided details.")
