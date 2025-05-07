@@ -1,8 +1,8 @@
 import {Component, HostListener, OnInit, Signal, signal} from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { EventData } from '../../models/event.model';
-import { EventService } from '../../services/event.service';
+import {RouterModule} from '@angular/router';
+import {EventData} from '../../models/event.model';
+import {EventService} from '../../services/event.service';
 
 @Component({
   selector: 'app-event-list',
@@ -16,8 +16,8 @@ export class EventListComponent implements OnInit {
   pastEvents: Signal<EventData[]> = signal<EventData[]>([]);
   error = signal<string | null>(null);
   eventToDelete: EventData | null = null;
-
-  constructor(private eventService: EventService) {}
+  constructor(private eventService: EventService) {
+  }
 
   ngOnInit(): void {
     this.loadEvents();

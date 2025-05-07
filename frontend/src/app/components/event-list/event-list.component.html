@@ -24,11 +24,19 @@
           <span class="event-participants-count">{{ event.totalParticipants }}</span>
           <div class="event-actions">
             <button [routerLink]="['/events', event.id, 'new']" class="add-participant-button"
-                    title="Lisa osavõtja üritusele {{ event.name }}">
-              <img ngSrc="/add-user.svg" alt="" class="add-participant-icon" height="800" width="800"/>
+                    title="Lisa osavõtja üritusele {{ event.name }}"
+                    #addButton (mouseenter)="addButton.setAttribute('data-hover', 'true')"
+                    (mouseleave)="addButton.setAttribute('data-hover', 'false')"
+                    (click)="addButton.setAttribute('data-clicked', 'true')">
+              <img [ngSrc]="addButton.getAttribute('data-clicked') === 'true' ? '/add-user.svg' : (addButton.getAttribute('data-hover') === 'true' ? '/add-user-up.svg' : '/add-user.svg')"
+                   alt="Add participant" class="add-participant-icon" height="800" width="800"/>
             </button>
-            <button (click)="openDeleteModal(event)" class="delete-button" title="Kustuta üritus {{ event.name }}">
-              <img ngSrc="/remove.svg" alt="" class="delete-icon" height="32" width="32"/>
+            <button (click)="openDeleteModal(event)" class="delete-button"
+                    title="Kustuta üritus {{ event.name }}"
+                    #deleteButton (mouseenter)="deleteButton.setAttribute('data-hover', 'true')"
+                    (mouseleave)="deleteButton.setAttribute('data-hover', 'false')">
+              <img [ngSrc]="deleteButton.getAttribute('data-hover') === 'true' ? '/remove-up.svg' : '/remove.svg'"
+                   alt="Delete event" class="delete-icon" height="32" width="32"/>
             </button>
           </div>
         </li>

@@ -21,6 +21,8 @@ export class EventCreateComponent {
     totalParticipants: 0
   };
 
+
+
   error: string | null = null;
   submitted = false;
   private readonly ADDITIONAL_INFO_MAX_LENGTH = 1000;
