@@ -24,7 +24,6 @@ databaseChangeLog:
               - column:
                   name: additional_info
                   value: "Juhtivate tehnoloogiaekspertide ettekanded"
-
         - insert:
             tableName: events
             columns:
@@ -46,7 +45,6 @@ databaseChangeLog:
               - column:
                   name: additional_info
                   value: "Elav muusika ja kohalikud artistid"
-
         - insert:
             tableName: events
             columns:
@@ -68,7 +66,6 @@ databaseChangeLog:
               - column:
                   name: additional_info
                   value: "Kunst, muusika ja kohalikud toidud"
-
   - changeSet:
       id: 011-insert-initial-participants-persons
       author: SA
@@ -88,8 +85,6 @@ databaseChangeLog:
               - column:
                   name: additional_info
                   value: "Eelistab hommikusi üritusi"
-        
-        
         - insert:
             tableName: persons
             columns:
@@ -104,62 +99,56 @@ databaseChangeLog:
                   value: "Kask"
               - column:
                   name: personal_code
-                  value: "49807132750"
+                  value: "48002093759"
               - column:
                   name: email
                   value: "katrin.kask@example.ee"
               - column:
                   name: phone
                   value: "+37255512345"
-  
-  
   - changeSet:
       id: 012-insert-initial-participants-companies
       author: SA
       changes:
-        - insert:
-            tableName: participants
-            columns:
-              - column:
-                  name: id
-                  valueNumeric: '11'
-              - column:
-                  name: participant_type
-                  value: "COMPANY"
-              - column:
-                  name: payment_method
-                  value: "BANK_TRANSFER"
-              - column:
-                  name: additional_info
-                  value: "Sponsoreerib üritust"
-        
-        
-        - insert:
-            tableName: companies
-            columns:
-              - column:
-                  name: id
-                  valueNumeric: '11'
-              - column:
-                  name: company_name
-                  value: "TechTrend OÜ"
-              - column:
-                  name: registration_code
-                  value: "12345678"
-              - column:
-                  name: participant_count
-                  valueNumeric: '5'
-              - column:
-                  name: contact_person
-                  value: "Katrin Kask"
-              - column:
-                  name: email
-                  value: "info@techtrend.ee"
-              - column:
-                  name: phone
-                  value: "+37255511111"
-  
-  
+          - insert:
+              tableName: participants
+              columns:
+                - column:
+                    name: id
+                    valueNumeric: '11'
+                - column:
+                    name: participant_type
+                    value: "COMPANY"
+                - column:
+                    name: payment_method
+                    value: "BANK_TRANSFER"
+                - column:
+                    name: additional_info
+                    value: "Sponsoreerib üritust"
+          - insert:
+              tableName: companies
+              columns:
+                - column:
+                    name: id
+                    valueNumeric: '11'
+                - column:
+                    name: company_name
+                    value: "TechTrend OÜ"
+                - column:
+                    name: registration_code
+                    value: "12345678"
+                - column:
+                    name: participant_count
+                    valueNumeric: '5'
+                - column:
+                    name: contact_person
+                    value: "Katrin Kask"
+                - column:
+                    name: email
+                    value: "info@techtrend.ee"
+                - column:
+                    name: phone
+                    value: "+37255511111"
   - changeSet:
       id: 013-insert-initial-event-participants
       author: SA
@@ -176,8 +165,6 @@ databaseChangeLog:
               - column:
                   name: attendance_status
                   value: "REGISTERED"
-        
-        
         - insert:
             tableName: event_participant
             columns:
@@ -190,4 +177,304 @@ databaseChangeLog:
               - column:
                   name: attendance_status
                   value: "REGISTERED"
-            
+  - changeSet:
+      id: 014-insert-additional-past-events
+      author: SA
+      changes:
+        - insert:
+            tableName: events
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '4'
+              - column:
+                  name: name
+                  value: "Narva Kultuurifestival 2024"
+              - column:
+                  name: date_time
+                  value: "2024-09-20T14:00:00Z"
+              - column:
+                  name: location
+                  value: "Narva Promenaad"
+              - column:
+                  name: status
+                  value: "ACTIVE"
+              - column:
+                  name: additional_info
+                  value: "Kohalikud esinejad ja kunstinäitused"
+        - insert:
+            tableName: events
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '5'
+              - column:
+                  name: name
+                  value: "Viljandi Toidumess 2024"
+              - column:
+                  name: date_time
+                  value: "2024-10-05T10:00:00Z"
+              - column:
+                  name: location
+                  value: "Viljandi Vabaduse plats"
+              - column:
+                  name: status
+                  value: "ACTIVE"
+              - column:
+                  name: additional_info
+                  value: "Kohalikud toidutootjad ja degusteerimised"
+        - insert:
+            tableName: events
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '6'
+              - column:
+                  name: name
+                  value: "Rakvere Jõuluturg 2024"
+              - column:
+                  name: date_time
+                  value: "2024-12-15T12:00:00Z"
+              - column:
+                  name: location
+                  value: "Rakvere Keskväljak"
+              - column:
+                  name: status
+                  value: "ACTIVE"
+              - column:
+                  name: additional_info
+                  value: "Käsitöötooted ja jõulumeeleolu"
+  - changeSet:
+      id: 015-insert-additional-participants-persons
+      author: SA
+      changes:
+        - insert:
+            tableName: participants
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '12'
+              - column:
+                  name: participant_type
+                  value: "PERSON"
+              - column:
+                  name: payment_method
+                  value: "CASH"
+              - column:
+                  name: additional_info
+                  value: "Osaleb perega"
+        - insert:
+            tableName: persons
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '12'
+              - column:
+                  name: first_name
+                  value: "Mart"
+              - column:
+                  name: last_name
+                  value: "Põder"
+              - column:
+                  name: personal_code
+                  value: "37903167053"
+              - column:
+                  name: email
+                  value: "mart.poder@example.ee"
+              - column:
+                  name: phone
+                  value: "+37256667788"
+        - insert:
+            tableName: participants
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '13'
+              - column:
+                  name: participant_type
+                  value: "PERSON"
+              - column:
+                  name: payment_method
+                  value: "CARD"
+              - column:
+                  name: additional_info
+                  value: "Vajab ligipääsu ratastooliga"
+        - insert:
+            tableName: persons
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '13'
+              - column:
+                  name: first_name
+                  value: "Liina"
+              - column:
+                  name: last_name
+                  value: "Tamm"
+              - column:
+                  name: personal_code
+                  value: "49702084761"
+              - column:
+                  name: email
+                  value: "liina.tamm@example.ee"
+              - column:
+                  name: phone
+                  value: "+37257778899"
+  - changeSet:
+      id: 016-insert-additional-participants-companies
+      author: SA
+      changes:
+        - insert:
+            tableName: participants
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '14'
+              - column:
+                  name: participant_type
+                  value: "COMPANY"
+              - column:
+                  name: payment_method
+                  value: "BANK_TRANSFER"
+              - column:
+                  name: additional_info
+                  value: "Pakub toitlustust"
+        - insert:
+            tableName: companies
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '14'
+              - column:
+                  name: company_name
+                  value: "Maitse OÜ"
+              - column:
+                  name: registration_code
+                  value: "98765432"
+              - column:
+                  name: participant_count
+                  valueNumeric: '3'
+              - column:
+                  name: contact_person
+                  value: "Mart Põder"
+              - column:
+                  name: email
+                  value: "info@maitse.ee"
+              - column:
+                  name: phone
+                  value: "+37254443322"
+        - insert:
+            tableName: participants
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '15'
+              - column:
+                  name: participant_type
+                  value: "COMPANY"
+              - column:
+                  name: payment_method
+                  value: "CARD"
+              - column:
+                  name: additional_info
+                  value: "Esitleb uusi tooteid"
+        - insert:
+            tableName: companies
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: '15'
+              - column:
+                  name: company_name
+                  value: "Käsitöö AS"
+              - column:
+                  name: registration_code
+                  value: "45678912"
+              - column:
+                  name: participant_count
+                  valueNumeric: '4'
+              - column:
+                  name: contact_person
+                  value: "Liina Tamm"
+              - column:
+                  name: email
+                  value: "contact@kasitoo.ee"
+              - column:
+                  name: phone
+                  value: "+37253332211"
+  - changeSet:
+      id: 017-insert-additional-event-participants
+      author: SA
+      changes:
+        - insert:
+            tableName: event_participant
+            columns:
+              - column:
+                  name: event_id
+                  valueNumeric: '4'
+              - column:
+                  name: participant_id
+                  valueNumeric: '12'
+              - column:
+                  name: attendance_status
+                  value: "REGISTERED"
+        - insert:
+            tableName: event_participant
+            columns:
+              - column:
+                  name: event_id
+                  valueNumeric: '4'
+              - column:
+                  name: participant_id
+                  valueNumeric: '14'
+              - column:
+                  name: attendance_status
+                  value: "REGISTERED"
+        - insert:
+            tableName: event_participant
+            columns:
+              - column:
+                  name: event_id
+                  valueNumeric: '5'
+              - column:
+                  name: participant_id
+                  valueNumeric: '13'
+              - column:
+                  name: attendance_status
+                  value: "REGISTERED"
+        - insert:
+            tableName: event_participant
+            columns:
+              - column:
+                  name: event_id
+                  valueNumeric: '5'
+              - column:
+                  name: participant_id
+                  valueNumeric: '14'
+              - column:
+                  name: attendance_status
+                  value: "REGISTERED"
+        - insert:
+            tableName: event_participant
+            columns:
+              - column:
+                  name: event_id
+                  valueNumeric: '6'
+              - column:
+                  name: participant_id
+                  valueNumeric: '12'
+              - column:
+                  name: attendance_status
+                  value: "REGISTERED"
+        - insert:
+            tableName: event_participant
+            columns:
+              - column:
+                  name: event_id
+                  valueNumeric: '6'
+              - column:
+                  name: participant_id
+                  valueNumeric: '15'
+              - column:
+                  name: attendance_status
+                  value: "REGISTERED"
