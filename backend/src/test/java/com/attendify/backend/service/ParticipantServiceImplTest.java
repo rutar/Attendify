@@ -301,14 +301,14 @@ class ParticipantServiceImplTest {
         Person updatedPerson = new Person();
         updatedPerson.setFirstName("Updated");
         updatedPerson.setLastName("Name");
-        updatedPerson.setPersonalCode("39506070819");
+        updatedPerson.setPersonalCode("43704186007");
         updatedPerson.setPaymentMethod(Participant.PaymentMethod.CASH);
         updatedPerson.setAdditionalInfo("Updated info");
         updatedPerson.setEmail("updated.doe@example.com");
         updatedPerson.setPhone("+37255567890");
 
         when(participantRepository.findById(1L)).thenReturn(Optional.of(person));
-        when(participantRepository.existsByPersonalCode("39506070819")).thenReturn(false);
+        when(participantRepository.existsByPersonalCode("43704186007")).thenReturn(false);
         when(participantRepository.save(any(Person.class))).thenReturn(updatedPerson);
 
         // Act
@@ -317,13 +317,13 @@ class ParticipantServiceImplTest {
         // Assert
         assertEquals("Updated", ((Person) result).getFirstName());
         assertEquals("Name", ((Person) result).getLastName());
-        assertEquals("39506070819", ((Person) result).getPersonalCode());
+        assertEquals("43704186007", ((Person) result).getPersonalCode());
         assertEquals(Participant.PaymentMethod.CASH, result.getPaymentMethod());
         assertEquals("Updated info", result.getAdditionalInfo());
         assertEquals("updated.doe@example.com", ((Person) result).getEmail());
         assertEquals("+37255567890", ((Person) result).getPhone());
         verify(participantRepository, times(1)).findById(1L);
-        verify(participantRepository, times(1)).existsByPersonalCode("39506070819");
+        verify(participantRepository, times(1)).existsByPersonalCode("43704186007");
         verify(participantRepository, times(1)).save(any(Person.class));
     }
 
@@ -356,15 +356,15 @@ class ParticipantServiceImplTest {
     void updateParticipant_WithChangedDuplicatePersonalCode_ShouldThrowDuplicateResourceException() {
         // Arrange
         Person updatedPerson = new Person();
-        updatedPerson.setPersonalCode("49506070819");
+        updatedPerson.setPersonalCode("43704186007");
 
         when(participantRepository.findById(1L)).thenReturn(Optional.of(person));
-        when(participantRepository.existsByPersonalCode("49506070819")).thenReturn(true);
+        when(participantRepository.existsByPersonalCode("43704186007")).thenReturn(true);
 
         // Act & Assert
         assertThrows(DuplicateResourceException.class, () -> participantService.updateParticipant(1L, updatedPerson));
         verify(participantRepository, times(1)).findById(1L);
-        verify(participantRepository, times(1)).existsByPersonalCode("49506070819");
+        verify(participantRepository, times(1)).existsByPersonalCode("43704186007");
         verify(participantRepository, never()).save(any());
     }
 
