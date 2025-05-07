@@ -11,12 +11,12 @@ test.describe('Participant Creation Form', () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:4200/events/1/new');
+    await page.goto('http://localhost:4200/events/99/new');
   });
 
   test('should display error when event fetch fails with 404', async ({ page }) => {
     // Navigate to participant creation page
-    await page.goto('http://localhost:4200/events/1/new');
+    await page.goto('http://localhost:4200/events/9/new');
 
     // Verify error message for failed event fetch
     await expect(page.locator('.alert-danger', { hasText: 'Osalejate nimekirja laadimine ebaõnnestus' })).toBeVisible();
@@ -50,7 +50,7 @@ test.describe('Participant Creation Form', () => {
 
     // Fill company details
     await page.getByLabel('Ettevõtte nimi:').fill('Tech Corp');
-    await page.getByLabel('Registrikood:').fill('987654321');
+    await page.getByLabel('Registrikood:').fill('98765432');
     await page.getByLabel('Osalejate arv:').fill('5');
     await page.getByLabel('Maksmisviis').selectOption('BANK_TRANSFER');
     await page.getByLabel('Lisainfo:').fill('Company registration');
@@ -102,15 +102,15 @@ test.describe('Participant Creation Form', () => {
     await page.waitForSelector('.mat-mdc-option', { timeout: 5000 });
 
     // Verify autocomplete contains expected participant from seeded data
-    await expect(page.locator('.mat-mdc-option', { hasText: 'Alice Kask (12345678901)' })).toBeVisible();
+    await expect(page.locator('.mat-mdc-option', { hasText: 'Alice Kask (61110095270)' })).toBeVisible();
 
     // Select autocomplete option
-    await page.locator('.mat-mdc-option', { hasText: 'Alice Kask (12345678901)' }).click();
+    await page.locator('.mat-mdc-option', { hasText: 'Alice Kask (61110095270)' }).click();
 
     // Verify form fields are populated
     await expect(page.getByLabel('Eesnimi:')).toHaveValue('Alice');
     await expect(page.getByLabel('Perenimi:')).toHaveValue('Kask');
-    await expect(page.getByLabel('Isikukood:')).toHaveValue('12345678901');
+    await expect(page.getByLabel('Isikukood:')).toHaveValue('61110095270');
   });
 
   test('should handle existing participant (409 conflict)', async ({ page }) => {
@@ -120,7 +120,7 @@ test.describe('Participant Creation Form', () => {
     // Fill details for existing participant (Alice Kask from seed data)
     await page.getByLabel('Eesnimi:').fill('Alice');
     await page.getByLabel('Perenimi:').fill('Kask');
-    await page.getByLabel('Isikukood:').fill('12345678901');
+    await page.getByLabel('Isikukood:').fill('61110095270');
     await page.getByLabel('Maksmisviis').selectOption('CARD');
 
     // Submit form

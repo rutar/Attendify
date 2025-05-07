@@ -76,49 +76,45 @@ test.describe('Event List Component', () => {
   });
 
   test('should display future and past events', async () => {
-    // Wait for events to render
-    await page.waitForFunction(() => document.querySelector('.event-list li') !== null, {timeout: 20000}).catch(async (err) => {
-      console.error('Timeout waiting for events:', err);
+    try {
+      // Wait for at least one list item to appear in the DOM
+      await page.waitForSelector('.event-list li', { timeout: 20000 });
+
+      // Verify section headers
+      const headers = page.locator('.event-section-header');
+      await expect(headers.nth(0)).toHaveText('Tulevased üritused');
+      await expect(headers.nth(1)).toHaveText('Toimunud üritused');
+
+      // Future events
+      const futureEventsList = page.locator('.event-card').nth(0).locator('.event-list li');
+      const futureCount = await futureEventsList.count();
+      console.log('Future events count:', futureCount);
+      await expect(futureEventsList).toHaveCount(expectedFutureEvents.length);
+
+      const firstFuture = futureEventsList.nth(0);
+      await expect(firstFuture.locator('.event-title')).toHaveText(expectedFutureEvents[0].name);
+      await expect(firstFuture.locator('.event-location')).toHaveText(expectedFutureEvents[0].location ?? '');
+      await expect(firstFuture.locator('.event-participants-count')).toHaveText(expectedFutureEvents[0].totalParticipants.toString());
+
+      // Past events
+      const pastEventsList = page.locator('.event-card').nth(1).locator('.event-list li');
+      const pastCount = await pastEventsList.count();
+      console.log('Past events count:', pastCount);
+      await expect(pastEventsList).toHaveCount(expectedPastEvents.length);
+
+      const firstPast = pastEventsList.nth(0);
+      await expect(
+        page.locator('.event-card').nth(1).locator('.event-list li').first().locator('.event-title-past')
+      ).toHaveText(expectedPastEvents[0].name);
+      await expect(firstPast.locator('.event-location')).toHaveText(expectedPastEvents[0].location ?? '');
+      await expect(firstPast.locator('.event-participants-count')).toHaveText(expectedPastEvents[0].totalParticipants.toString());
+
+    } catch (error) {
+      console.error('Test failed:', error);
       console.log('Page HTML:', await page.content());
-      await page.screenshot({path: 'screenshot.png'});
-    });
-
-    // Log component state
-    await page.evaluate(() => {
-      const component = document.querySelector('app-event-list') as any;
-      console.log('Component future events:', component?.futureEvents?.() || 'No future events');
-      console.log('Component past events:', component?.pastEvents?.() || 'No past events');
-    });
-
-    // Log DOM state
-    console.log('Future section header:', await page.locator('.event-section-header').first().textContent());
-    console.log('Past section header:', await page.locator('.event-section-header').last().textContent());
-    const futureEventsList = page.locator('.event-card').first().locator('.event-list li');
-    console.log('Future events count:', await futureEventsList.count());
-    const pastEventsList = page.locator('.event-card').last().locator('.event-list li');
-    console.log('Past events count:', await pastEventsList.count());
-
-    // Check section headers
-    await expect(page.locator('.event-section-header').first()).toHaveText('Tulevased üritused');
-    await expect(page.locator('.event-section-header').last()).toHaveText('Toimunud üritused');
-
-    // Check future events
-    await expect(futureEventsList).toHaveCount(expectedFutureEvents.length);
-
-    // Check first future event details
-    const firstFutureEvent = futureEventsList.first();
-    await expect(firstFutureEvent.locator('.event-title')).toHaveText(expectedFutureEvents[0].name);
-    await expect(firstFutureEvent.locator('.event-location')).toHaveText(expectedFutureEvents[0].location || '');
-    await expect(firstFutureEvent.locator('.event-participants-count')).toHaveText(expectedFutureEvents[0].totalParticipants.toString());
-
-    // Check past events
-    await expect(pastEventsList).toHaveCount(expectedPastEvents.length);
-
-    // Check first past event details
-    const firstPastEvent = pastEventsList.first();
-    await expect(firstPastEvent.locator('.event-title')).toHaveText(expectedPastEvents[0].name);
-    await expect(firstPastEvent.locator('.event-location')).toHaveText(expectedPastEvents[0].location || '');
-    await expect(firstPastEvent.locator('.event-participants-count')).toHaveText(expectedPastEvents[0].totalParticipants.toString());
+      await page.screenshot({ path: 'screenshot.png' });
+      throw error; // Ensure test fails properly
+    }
   });
 
   test('should navigate to event details when clicking on event title', async () => {

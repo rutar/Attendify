@@ -34,9 +34,9 @@ export async function seedDatabase() {
     await pool.query(`
       INSERT INTO persons (id, first_name, last_name, personal_code, email, phone)
       VALUES
-        (${aliceId}, 'Alice', 'Kask', '12345678901', 'alice@example.com', '555-1111'),
-        (${bobId}, 'Bob', 'Mets', '12345678902', 'bob@example.com', '555-2222'),
-        (${carolId}, 'Carol', 'Tamm', '12345678903', 'carol@example.com', '555-3333');
+        (${aliceId}, 'Alice', 'Kask', '61110095270', 'alice@example.com', '555-1111'),
+        (${bobId}, 'Bob', 'Mets', '36001195716', 'bob@example.com', '555-2222'),
+        (${carolId}, 'Carol', 'Tamm', '46908049530', 'carol@example.com', '555-3333');
     `);
 
     // Insert event-participant links (attendance_status defaults to 'REGISTERED')

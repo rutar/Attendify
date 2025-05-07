@@ -27,7 +27,7 @@ test.describe('Event Detail Component', () => {
     const secondRow = participants.nth(1);
     await expect(secondRow.locator('.participant-col.number')).toHaveText('2.');
     await expect(secondRow.locator('.participant-col.name')).toHaveText('Bob Mets');
-    await expect(secondRow.locator('.participant-col.code')).toHaveText('12345678902');
+    await expect(secondRow.locator('.participant-col.code')).toHaveText('36001195716');
   });
 
   test('should allow deleting a participant', async ({ page }) => {
