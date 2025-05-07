@@ -4,6 +4,7 @@
       <h2>Osavõtja info</h2>
     </div>
     <div class="card-body">
+      <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
       <form [formGroup]="participantForm" (ngSubmit)="onSubmit()">
         <div class="mb-2 offset-md-3">
           <div class="form-check form-check-inline radio-buttons">
@@ -31,39 +32,46 @@
         <div *ngIf="participantForm.get('type')?.value === 'PERSON'" class="mb-0">
           <div class="form-row">
             <label for="firstName">Eesnimi:</label>
-            <input
-              id="firstName"
-              formControlName="firstName"
-              [class.is-invalid]="participantForm.get('firstName')?.invalid && participantForm.get('firstName')?.touched"
-            />
-            <div class="error-msg"
-                 *ngIf="participantForm.get('firstName')?.invalid && participantForm.get('firstName')?.touched">
-              Eesnimi on kohustuslik
+            <div class="input-container">
+              <input
+                id="firstName"
+                formControlName="firstName"
+                [class.is-invalid]="participantForm.get('firstName')?.invalid"
+              />
+              <div class="error-msg" *ngIf="participantForm.get('firstName')?.invalid">
+                {{ participantForm.get('firstName')?.errors?.['required'] ? 'Eesnimi on kohustuslik' :
+                participantForm.get('firstName')?.errors?.['serverError'] || 'Viga eesnime sisestamisel' }}
+              </div>
             </div>
           </div>
 
           <div class="form-row">
             <label for="lastName">Perenimi:</label>
-            <input
-              id="lastName"
-              formControlName="lastName"
-              [class.is-invalid]="participantForm.get('lastName')?.invalid && participantForm.get('lastName')?.touched"
-            />
-            <div class="error-msg"
-                 *ngIf="participantForm.get('lastName')?.invalid && participantForm.get('lastName')?.touched">
-              Perekonnanimi on kohustuslik
+            <div class="input-container">
+              <input
+                id="lastName"
+                formControlName="lastName"
+                [class.is-invalid]="participantForm.get('lastName')?.invalid"
+              />
+              <div class="error-msg" *ngIf="participantForm.get('lastName')?.invalid">
+                {{ participantForm.get('lastName')?.errors?.['required'] ? 'Perekonnanimi on kohustuslik' :
+                participantForm.get('lastName')?.errors?.['serverError'] || 'Viga perekonnanime sisestamisel' }}
+              </div>
             </div>
           </div>
+
           <div class="form-row">
             <label for="personalCode">Isikukood:</label>
-            <input
-              id="personalCode"
-              formControlName="personalCode"
-              [class.is-invalid]="participantForm.get('personalCode')?.invalid && participantForm.get('personalCode')?.touched"
-            />
-            <div class="error-msg"
-                 *ngIf="participantForm.get('personalCode')?.invalid && participantForm.get('personalCode')?.touched">
-              Isikukood on kohustuslik
+            <div class="input-container">
+              <input
+                id="personalCode"
+                formControlName="personalCode"
+                [class.is-invalid]="participantForm.get('personalCode')?.invalid"
+              />
+              <div class="error-msg" *ngIf="participantForm.get('personalCode')?.invalid">
+                {{ participantForm.get('personalCode')?.errors?.['required'] ? 'Isikukood on kohustuslik' :
+                participantForm.get('personalCode')?.errors?.['serverError'] || 'Viga isikukoodi sisestamisel' }}
+              </div>
             </div>
           </div>
         </div>
@@ -71,75 +79,87 @@
         <div *ngIf="participantForm.get('type')?.value === 'COMPANY'">
           <div class="form-row">
             <label for="companyName">Ettevõtte nimi:</label>
-            <input
-              id="companyName"
-              formControlName="companyName"
-              [class.is-invalid]="participantForm.get('companyName')?.invalid && participantForm.get('companyName')?.touched"
-            />
-            <div
-              class="error-msg"
-              *ngIf="participantForm.get('companyName')?.invalid && participantForm.get('companyName')?.touched"
-            >
-              Ettevõtte nimi on kohustuslik
+            <div class="input-container">
+              <input
+                id="companyName"
+                formControlName="companyName"
+                [class.is-invalid]="participantForm.get('companyName')?.invalid"
+              />
+              <div class="error-msg" *ngIf="participantForm.get('companyName')?.invalid">
+                {{ participantForm.get('companyName')?.errors?.['required'] ? 'Ettevõtte nimi on kohustuslik' :
+                participantForm.get('companyName')?.errors?.['serverError'] || 'Viga ettevõtte nime sisestamisel' }}
+              </div>
             </div>
           </div>
 
           <div class="form-row">
             <label for="registrationCode">Registrikood:</label>
-            <input
-              id="registrationCode"
-              formControlName="registrationCode"
-              [class.is-invalid]="participantForm.get('registrationCode')?.invalid && participantForm.get('registrationCode')?.touched"
-            />
-            <div
-              class="error-msg"
-              *ngIf="participantForm.get('registrationCode')?.invalid && participantForm.get('registrationCode')?.touched"
-            >
-              Registrikood on kohustuslik
+            <div class="input-container">
+              <input
+                id="registrationCode"
+                formControlName="registrationCode"
+                [class.is-invalid]="participantForm.get('registrationCode')?.invalid"
+              />
+              <div class="error-msg" *ngIf="participantForm.get('registrationCode')?.invalid">
+                {{ participantForm.get('registrationCode')?.errors?.['required'] ? 'Registrikood on kohustuslik' :
+                participantForm.get('registrationCode')?.errors?.['pattern'] ? 'Registrikood peab olema 8-kohaline number' :
+                  participantForm.get('registrationCode')?.errors?.['serverError'] || 'Viga registrikoodi sisestamisel' }}
+              </div>
             </div>
           </div>
 
           <div class="form-row">
             <label for="participantCount">Osalejate arv:</label>
-            <input
-              type="number"
-              id="participantCount"
-              formControlName="participantCount"
-              [class.is-invalid]="participantForm.get('participantCount')?.invalid && participantForm.get('participantCount')?.touched"
-            />
-            <div
-              class="error-msg"
-              *ngIf="participantForm.get('participantCount')?.invalid && participantForm.get('participantCount')?.touched"
-            >
-              Osalejate arv on kohustuslik ja peab olema positiivne number
+            <div class="input-container">
+              <input
+                type="number"
+                id="participantCount"
+                formControlName="participantCount"
+                [class.is-invalid]="participantForm.get('participantCount')?.invalid"
+              />
+              <div class="error-msg" *ngIf="participantForm.get('participantCount')?.invalid">
+                {{ participantForm.get('participantCount')?.errors?.['required'] ? 'Osalejate arv on kohustuslik' :
+                participantForm.get('participantCount')?.errors?.['min'] ? 'Osalejate arv peab olema positiivne number' :
+                  participantForm.get('participantCount')?.errors?.['serverError'] || 'Viga osalejate arvu sisestamisel' }}
+              </div>
             </div>
           </div>
         </div>
 
         <div class="form-row">
           <label for="paymentMethod">Maksmisviis</label>
-          <select
-            id="paymentMethod"
-            formControlName="paymentMethod"
-            [class.is-invalid]="participantForm.get('paymentMethod')?.invalid && participantForm.get('paymentMethod')?.touched"
-          >
-            <option [ngValue]="null"></option>
-            <option value="CARD">Kaart</option>
-            <option value="BANK_TRANSFER">Pangaülekanne</option>
-            <option value="CASH">Sularaha</option>
-          </select>
-          <div class="error-msg"
-               *ngIf="participantForm.get('paymentMethod')?.invalid && participantForm.get('paymentMethod')?.touched">
-            Maksmisviis on kohustuslik
+          <div class="input-container">
+            <select
+              id="paymentMethod"
+              formControlName="paymentMethod"
+              [class.is-invalid]="participantForm.get('paymentMethod')?.invalid"
+            >
+              <option [ngValue]="null"></option>
+              <option value="CARD">Kaart</option>
+              <option value="BANK_TRANSFER">Pangaülekanne</option>
+              <option value="CASH">Sularaha</option>
+            </select>
+            <div class="error-msg" *ngIf="participantForm.get('paymentMethod')?.invalid">
+              {{ participantForm.get('paymentMethod')?.errors?.['required'] ? 'Maksmisviis on kohustuslik' :
+              participantForm.get('paymentMethod')?.errors?.['serverError'] || 'Viga maksmisviisi valimisel' }}
+            </div>
           </div>
         </div>
 
         <div class="form-row">
           <label for="additionalInfo">Lisainfo:</label>
-          <textarea
-            id="additionalInfo"
-            formControlName="additionalInfo"
-          ></textarea>
+          <div class="input-container">
+            <textarea
+              id="additionalInfo"
+              formControlName="additionalInfo"
+              [class.is-invalid]="participantForm.get('additionalInfo')?.invalid"
+            ></textarea>
+            <div class="error-msg" *ngIf="participantForm.get('additionalInfo')?.invalid">
+              {{ participantForm.get('additionalInfo')?.errors?.['maxlength'] ?
+              'Lisainfo ei tohi ületada ' + (participantForm.get('type')?.value === 'PERSON' ? 1000 : 5000) + ' tähemärki' :
+              participantForm.get('additionalInfo')?.errors?.['serverError'] || 'Viga lisainfo sisestamisel' }}
+            </div>
+          </div>
         </div>
 
         <div class="form-actions">

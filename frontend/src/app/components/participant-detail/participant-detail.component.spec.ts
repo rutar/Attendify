@@ -163,7 +163,7 @@ describe('ParticipantDetailComponent', () => {
       personalCode: '12345678901',
       paymentMethod: 'CARD'
     }));
-    expect(routerMock.navigate).toHaveBeenCalledWith(['/participants']);
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/events']);
     expect(component.error()).toBeNull();
   });
 
