@@ -25,7 +25,7 @@
           <div class="event-actions">
             <button [routerLink]="['/events', event.id, 'new']" class="add-participant-button"
                     title="Lisa osavõtja üritusele {{ event.name }}">
-              <img ngSrc="/add.svg" alt="" class="add-participant-icon" height="800" width="800"/>
+              <img ngSrc="/add-user.svg" alt="" class="add-participant-icon" height="800" width="800"/>
             </button>
             <button (click)="openDeleteModal(event)" class="delete-button" title="Kustuta üritus {{ event.name }}">
               <img ngSrc="/remove.svg" alt="" class="delete-icon" height="32" width="32"/>
@@ -53,18 +53,12 @@
         <li *ngFor="let event of pastEvents(); let i = index; trackBy: trackById">
           <div class="event-title-container">
             <span class="event-number">{{ i + 1 }}.</span>
-            <a class="event-title" [routerLink]="['/events', event.id, 'participants']"
-               title="Vaata toimunud ürituse {{ event.name }} osavõtjaid">{{ event.name }}</a>
+            <span class="event-title-past">{{ event.name }}</span>
           </div>
           <span class="event-date">{{ event.dateTime | date: 'dd.MM.yyyy' }}</span>
           <span class="event-location">{{ event.location }}</span>
           <span class="event-participants-count">{{ event.totalParticipants }}</span>
-          <div class="event-actions">
-            <button [routerLink]="['/events', event.id, 'new']" class="add-participant-button"
-                    title="Lisa osavõtja toimunud üritusele {{ event.name }}">
-              <img ngSrc="/add.svg" alt="" class="add-participant-icon" height="800" width="800"/>
-            </button>
-          </div>
+          <div class="event-actions"></div>
         </li>
         <li *ngIf="!pastEvents()?.length" class="empty-message">Toimunud üritusi pole</li>
       </ul>
