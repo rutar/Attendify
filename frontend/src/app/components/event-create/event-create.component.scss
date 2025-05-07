@@ -88,7 +88,8 @@ form {
   outline: none;
 }
 
-.form-row input.is-invalid {
+.form-row input.is-invalid,
+.form-row textarea.is-invalid {
   border-color: #c00;
   background-color: #fff5f5;
 }

@@ -23,6 +23,7 @@ export class EventCreateComponent {
 
   error: string | null = null;
   submitted = false;
+  private readonly ADDITIONAL_INFO_MAX_LENGTH = 1000;
 
   constructor(private eventService: EventService, private router: Router) {}
 
@@ -31,6 +32,10 @@ export class EventCreateComponent {
     const selectedDate = new Date(this.event.dateTime);
     const now = new Date();
     return selectedDate < now;
+  }
+
+  isAdditionalInfoTooLong(): boolean {
+    return !!this.event.additionalInfo && this.event.additionalInfo.length > this.ADDITIONAL_INFO_MAX_LENGTH;
   }
 
   save(): void {
@@ -46,6 +51,11 @@ export class EventCreateComponent {
       return;
     }
 
+    if (this.isAdditionalInfoTooLong()) {
+      this.error = `Lisainfo ei tohi ületada ${this.ADDITIONAL_INFO_MAX_LENGTH} tähemärki`;
+      return;
+    }
+
     this.error = null;
 
     (this.event as EventData).dateTime = new Date(this.event.dateTime).toISOString();
@@ -53,7 +63,13 @@ export class EventCreateComponent {
 
     this.eventService.createEvent(this.event as EventData).subscribe({
       next: () => this.router.navigate(['/events']),
-      error: () => (this.error = 'Ürituse lisamine ebaõnnestus'),
+      error: (err) => {
+        if (err.status === 400 && err.error?.includes('additional info exceeds maximum length')) {
+          this.error = `Lisainfo ei tohi ületada ${this.ADDITIONAL_INFO_MAX_LENGTH} tähemärki`;
+        } else {
+          this.error = 'Ürituse lisamine ebaõnnestus';
+        }
+      },
     });
   }
 }

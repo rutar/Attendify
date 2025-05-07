@@ -54,7 +54,11 @@
             rows="2"
             [(ngModel)]="event.additionalInfo"
             name="additionalInfo"
+            [class.is-invalid]="submitted && isAdditionalInfoTooLong()"
           ></textarea>
+          <div *ngIf="submitted && isAdditionalInfoTooLong()" class="error-msg">
+            Lisainfo ei tohi ületada 1000 tähemärki
+          </div>
         </div>
 
         <div class="form-actions">
