@@ -41,10 +41,10 @@ export async function seedDatabase() {
 
     // Insert event-participant links (attendance_status defaults to 'REGISTERED')
     const links = [
-      [futureConfId, aliceId],
+      [futureConfId, carolId],
       [futureConfId, bobId],
       [techMeetupId, bobId],
-      [techMeetupId, carolId],
+      [techMeetupId, aliceId],
       [pastWorkshopId, aliceId],
     ];
     for (const [eventId, participantId] of links) {

@@ -221,14 +221,10 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
             },
             error: (eventErr) => {
               console.error('Failed to add existing participant to event:', eventErr);
-              if (eventErr.status === 409) {
+              if (eventErr.message?.includes('Conflict')) {
                 this.error.set(this.errorMessages.participant_already_added);
-                if (formValue.type === 'PERSON') {
-                  this.participantForm.get('personalCode')?.setErrors({ serverError: this.errorMessages.duplicate_personal_code });
-                } else {
-                  this.participantForm.get('registrationCode')?.setErrors({ serverError: this.errorMessages.duplicate_registration_code });
-                }
-              } else {
+              }
+             else {
                 this.error.set(this.errorMessages.participant_add_failed);
               }
             }

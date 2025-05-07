@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { ParticipantService } from '../../services/participant.service';
 import { EventService } from '../../services/event.service';
 import { EventData } from '../../models/event.model';
@@ -11,7 +12,8 @@ import {
   createParticipantForm,
   mapFormToParticipant,
   resetParticipantForm,
-  updateParticipantValidators, loadEventAndParticipants
+  updateParticipantValidators,
+  loadEventAndParticipants
 } from '../../utils/form-utils';
 
 @Component({
@@ -21,15 +23,15 @@ import {
   templateUrl: './event-detail.component.html',
   styleUrls: ['./event-detail.component.scss'],
 })
-export class EventDetailComponent implements OnInit {
+export class EventDetailComponent implements OnInit, OnDestroy {
   event = signal<EventData | null>(null);
   participants = signal<Participant[]>([]);
   participantForm: FormGroup;
   error = signal<string | null>(null);
   participantToDelete: Participant | null = null;
-
+  private destroy$ = new Subject<void>();
   private readonly errorMessages = DEFAULT_ERROR_MESSAGES;
-  eventId: string | null | undefined;
+  eventId: string | null = null; // Fix type to string | null
 
   constructor(
     private fb: FormBuilder,
@@ -42,26 +44,31 @@ export class EventDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadEventData();
+    this.eventId = this.route.snapshot.paramMap.get('id'); // string | null
+    this.loadEventData().subscribe(() => {
+      console.log('After loadEventData, participants:', this.participants());
+    });
     this.setupFormListeners();
   }
 
-  private loadEventData(): void {
-    this.eventId = this.route.snapshot.paramMap.get('id');
-    loadEventAndParticipants(
+  private loadEventData(): Observable<void> {
+    return loadEventAndParticipants(
       this.eventId,
       this.eventService,
       this.event,
       this.participants,
       this.error,
       this.errorMessages
-    );
+    ).pipe(takeUntil(this.destroy$));
   }
 
   private setupFormListeners(): void {
-    this.participantForm.get('type')?.valueChanges.subscribe((type) => {
-      updateParticipantValidators(this.participantForm, type);
-    });
+    this.participantForm
+      .get('type')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((type) => {
+        updateParticipantValidators(this.participantForm, type);
+      });
   }
 
   navigateToParticipant(eventId: string, participantId: string): void {
@@ -77,34 +84,40 @@ export class EventDetailComponent implements OnInit {
 
     const participant = mapFormToParticipant(this.participantForm.value);
 
-    this.participantService.createParticipant(participant).subscribe({
-      next: (newParticipant) => {
-        if (this.eventId && newParticipant.id) {
-          this.eventService.addParticipantToEvent(+this.eventId, {
-            id: newParticipant.id,
-            type: newParticipant.type
-          }).subscribe({
-            next: () => {
-              this.participants.update((parts) => [...parts, newParticipant]);
-              resetParticipantForm(this.participantForm);
-              this.error.set(null);
-            },
-            error: (err) => {
-              console.error('Failed to add participant to event:', err);
-              this.error.set(this.errorMessages.participant_add_failed);
-            }
-          });
-        } else {
-          this.participants.update((parts) => [...parts, newParticipant]);
-          resetParticipantForm(this.participantForm);
-          this.error.set(null);
-        }
-      },
-      error: (err) => {
-        console.error('Failed to create participant:', err);
-        this.error.set(this.errorMessages.participant_add_failed);
-      }
-    });
+    this.participantService
+      .createParticipant(participant)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (newParticipant) => {
+          if (this.eventId && newParticipant.id) {
+            this.eventService
+              .addParticipantToEvent(+this.eventId, {
+                id: newParticipant.id,
+                type: newParticipant.type,
+              })
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: () => {
+                  this.participants.update((parts) => [...parts, newParticipant]);
+                  resetParticipantForm(this.participantForm);
+                  this.error.set(null);
+                },
+                error: (err) => {
+                  console.error('Failed to add participant to event:', err);
+                  this.error.set(this.errorMessages.participant_add_failed);
+                },
+              });
+          } else {
+            this.participants.update((parts) => [...parts, newParticipant]);
+            resetParticipantForm(this.participantForm);
+            this.error.set(null);
+          }
+        },
+        error: (err) => {
+          console.error('Failed to create participant:', err);
+          this.error.set(this.errorMessages.participant_add_failed);
+        },
+      });
   }
 
   openDeleteModal(participant: Participant): void {
@@ -124,27 +137,33 @@ export class EventDetailComponent implements OnInit {
 
   deleteParticipant(participantId: number): void {
     if (this.eventId) {
-      this.eventService.removeParticipantFromEvent(+this.eventId, participantId).subscribe({
-        next: () => {
-          this.participants.update((parts) => parts.filter((p) => p.id !== participantId));
-          this.error.set(null);
-        },
-        error: (err) => {
-          console.error('Failed to remove participant:', err);
-          this.error.set(this.errorMessages.participant_delete_failed);
-        }
-      });
+      this.eventService
+        .removeParticipantFromEvent(+this.eventId, participantId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.participants.update((parts) => parts.filter((p) => p.id !== participantId));
+            this.error.set(null);
+          },
+          error: (err) => {
+            console.error('Failed to remove participant:', err);
+            this.error.set(this.errorMessages.participant_delete_failed);
+          },
+        });
     } else {
-      this.participantService.deleteParticipant(participantId).subscribe({
-        next: () => {
-          this.participants.update((parts) => parts.filter((p) => p.id !== participantId));
-          this.error.set(null);
-        },
-        error: (err) => {
-          console.error('Failed to delete participant:', err);
-          this.error.set(this.errorMessages.participant_delete_failed);
-        }
-      });
+      this.participantService
+        .deleteParticipant(participantId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.participants.update((parts) => parts.filter((p) => p.id !== participantId));
+            this.error.set(null);
+          },
+          error: (err) => {
+            console.error('Failed to delete participant:', err);
+            this.error.set(this.errorMessages.participant_delete_failed);
+          },
+        });
     }
   }
 
@@ -152,14 +171,12 @@ export class EventDetailComponent implements OnInit {
     return participant.id ?? index;
   }
 
-  @HostListener('document:keydown.escape', ['$event'])
-  onEscapePress(event: KeyboardEvent): void {
-    if (this.participantToDelete !== null) {
-      this.closeDeleteModal();
-    }
-  }
-
   onOverlayClick(event: MouseEvent): void {
     this.closeDeleteModal();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

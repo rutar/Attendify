@@ -19,7 +19,7 @@ test.describe('Participant Creation Form', () => {
     await page.goto('http://localhost:4200/events/9/new');
 
     // Verify error message for failed event fetch
-    await expect(page.locator('.alert-danger', { hasText: 'Osalejate nimekirja laadimine ebaõnnestus' })).toBeVisible();
+    await expect(page.locator('.alert-danger', { hasText: 'Ürituse andmete laadimine ebaõnnestus' })).toBeVisible();
 
     // Verify form is still accessible despite event fetch failure
     await expect(page.getByLabel('Eraisik')).toBeVisible();
@@ -118,9 +118,9 @@ test.describe('Participant Creation Form', () => {
     await page.getByLabel('Eraisik').check();
 
     // Fill details for existing participant (Alice Kask from seed data)
-    await page.getByLabel('Eesnimi:').fill('Alice');
-    await page.getByLabel('Perenimi:').fill('Kask');
-    await page.getByLabel('Isikukood:').fill('61110095270');
+    await page.getByLabel('Eesnimi:').fill('Carol');
+    await page.getByLabel('Perenimi:').fill('Tamm');
+    await page.getByLabel('Isikukood:').fill('46908049530');
     await page.getByLabel('Maksmisviis').selectOption('CARD');
 
     // Submit form

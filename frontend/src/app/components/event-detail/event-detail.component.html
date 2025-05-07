@@ -48,8 +48,12 @@
             </div>
 
             <div class="participant-col actions">
-              <button (click)="openDeleteModal(p)" class="delete-button" title="Kustuta osavõtja">
-                <img ngSrc="/remove.svg" alt="Kustuta" class="delete-icon" height="32" width="32"/>
+              <button (click)="openDeleteModal(p)" class="delete-button"
+                      title="Kustuta osavõtja"
+                      #deleteButton (mouseenter)="deleteButton.setAttribute('data-hover', 'true')"
+                      (mouseleave)="deleteButton.setAttribute('data-hover', 'false')">
+                <img [ngSrc]="deleteButton.getAttribute('data-hover') === 'true' ? '/remove-up.svg' : '/remove.svg'"
+                     alt="Kustuta" class="delete-icon" height="32" width="32"/>
               </button>
             </div>
 
@@ -59,10 +63,9 @@
     </div>
 
 
-
-      <div class="form-actions">
-        <a routerLink="/events" class="btn-grey">Tagasi</a>
-      </div>
+    <div class="form-actions">
+      <a routerLink="/events" class="btn-grey">Tagasi</a>
+    </div>
 
     <!-- MODAL -->
     <div
@@ -80,7 +83,8 @@
           <h3 id="modal-title">Kinnita kustutamine</h3>
         </div>
         <div class="modal-body">
-          <p>Kas soovite osavõtja "{{ participantToDelete.type === 'PERSON' ? participantToDelete.firstName + ' ' + participantToDelete.lastName : participantToDelete.companyName || 'Nimetu ettevõte' }}" kustutada?</p>
+          <p>Kas soovite osavõtja
+            "{{ participantToDelete.type === 'PERSON' ? participantToDelete.firstName + ' ' + participantToDelete.lastName : participantToDelete.companyName || 'Nimetu ettevõte' }}" kustutada?</p>
         </div>
         <div class="modal-footer">
           <button
@@ -100,6 +104,5 @@
         </div>
       </div>
     </div>
-
   </div>
 </div>

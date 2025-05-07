@@ -19,33 +19,32 @@ test.describe('Event Detail Component', () => {
     // Verify first participant (Alice)
     const firstRow = participants.first();
     await expect(firstRow.locator('.participant-col.number')).toHaveText('1.');
-    await expect(firstRow.locator('.participant-col.name')).toHaveText('Alice Kask');
-    await expect(firstRow.locator('.participant-col.code')).toHaveText('12345678901');
+    await expect(firstRow.locator('.participant-col.name')).toHaveText('Bob Mets');
+    await expect(firstRow.locator('.participant-col.code')).toHaveText('36001195716');
     await expect(firstRow.locator('.participant-col.actions button')).toHaveAttribute('title', 'Kustuta osavõtja');
 
     // Verify second participant (Bob)
     const secondRow = participants.nth(1);
     await expect(secondRow.locator('.participant-col.number')).toHaveText('2.');
-    await expect(secondRow.locator('.participant-col.name')).toHaveText('Bob Mets');
-    await expect(secondRow.locator('.participant-col.code')).toHaveText('36001195716');
+    await expect(secondRow.locator('.participant-col.name')).toHaveText('Carol Tamm');
+    await expect(secondRow.locator('.participant-col.code')).toHaveText('46908049530');
   });
 
   test('should allow deleting a participant', async ({ page }) => {
     const participants = page.locator('.participant-row');
-    await expect(participants).toHaveCount(2); // Initial count: Alice and Bob
+    await expect(participants).toHaveCount(2);
 
-    // Open delete modal for first participant (Alice)
     await participants.first().locator('.participant-col.actions button').click();
 
     // Verify modal content
-    await expect(page.locator('.modal-body p')).toContainText('Kas soovite osavõtja "Alice Kask" kustutada?');
+    await expect(page.locator('.modal-body p')).toContainText('Kas soovite osavõtja "Bob Mets" kustutada?');
 
     // Confirm deletion
     await page.locator('.modal-button.confirm-button').click();
 
     // Verify participant is removed
     await expect(participants).toHaveCount(1); // Only Bob remains
-    await expect(participants.first().locator('.participant-col.name')).toHaveText('Bob Mets');
+    await expect(participants.first().locator('.participant-col.name')).toHaveText('Carol Tamm');
 
     // Verify modal is closed
     await expect(page.locator('.modal-overlay')).not.toBeVisible();
