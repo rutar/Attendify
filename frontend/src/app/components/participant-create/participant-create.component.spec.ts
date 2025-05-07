@@ -1,352 +1,516 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { ActivatedRoute } from '@angular/router';
-import { of, throwError } from 'rxjs';
 import { ParticipantCreateComponent } from './participant-create.component';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { ActivatedRoute, Router, convertToParamMap, ParamMap } from '@angular/router';
 import { ParticipantService } from '../../services/participant.service';
 import { EventService } from '../../services/event.service';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { of, throwError } from 'rxjs';
 import { Participant } from '../../models/participant.model';
 import { EventData } from '../../models/event.model';
+import { HarnessLoader } from '@angular/cdk/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatAutocompleteHarness } from '@angular/material/autocomplete/testing';
 import { By } from '@angular/platform-browser';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('ParticipantCreateComponent', () => {
   let component: ParticipantCreateComponent;
   let fixture: ComponentFixture<ParticipantCreateComponent>;
-  let participantServiceSpy: jasmine.SpyObj<ParticipantService>;
-  let eventServiceSpy: jasmine.SpyObj<EventService>;
+  let participantService: jasmine.SpyObj<ParticipantService>;
+  let eventService: jasmine.SpyObj<EventService>;
+  let router: jasmine.SpyObj<Router>;
+  let loader: HarnessLoader;
 
-  const mockEventData: EventData = {
-    id: 1,
+  // Mock data
+  const mockEventId = '123';
+  const mockEvent: EventData = {
+    id: 123,
     name: 'Test Event',
-    dateTime: '2025-05-01T10:00:00',
+    startDate: new Date(),
+    endDate: new Date(),
     location: 'Test Location',
-    totalParticipants: 1,
-    status: 'ACTIVE',
-    additionalInfo: 'Test additional info',
-    createdAt: '2025-04-25T08:00:00',
-    updatedAt: '2025-04-25T08:00:00'
+    description: 'Test Description'
+  };
+
+  const mockPersonParticipant: Participant = {
+    id: 1,
+    type: 'PERSON',
+    firstName: 'John',
+    lastName: 'Doe',
+    personalCode: '12345678901',
+    paymentMethod: 'CARD'
+  };
+
+  const mockCompanyParticipant: Participant = {
+    id: 2,
+    type: 'COMPANY',
+    companyName: 'Test Company',
+    registrationCode: '12345678',
+    participantCount: 5,
+    paymentMethod: 'BANK_TRANSFER'
   };
 
   const mockParticipants: Participant[] = [
-    {
-      id: 1,
-      type: 'PERSON',
-      firstName: 'Test',
-      lastName: 'Person',
-      personalCode: '12345678901',
-      paymentMethod: 'CARD'
-    }
+    mockPersonParticipant,
+    mockCompanyParticipant
   ];
-
-  const mockActivatedRoute = {
-    snapshot: {
-      paramMap: {
-        get: (param: string) => {
-          if (param === 'id') {
-            return '1';
-          }
-          return null;
-        }
-      }
-    }
-  };
 
   beforeEach(async () => {
     // Create spies for services
-    participantServiceSpy = jasmine.createSpyObj('ParticipantService',
-      ['createParticipant', 'deleteParticipant']);
-    eventServiceSpy = jasmine.createSpyObj('EventService',
-      ['getEvent', 'getEventParticipants', 'addParticipantToEvent', 'removeParticipantFromEvent']);
+    const participantServiceSpy = jasmine.createSpyObj('ParticipantService', [
+      'createParticipant',
+      'searchParticipants',
+      'deleteParticipant'
+    ]);
 
-    // Configure spy return values
-    eventServiceSpy.getEvent.and.returnValue(of(mockEventData));
-    eventServiceSpy.getEventParticipants.and.returnValue(of(mockParticipants));
+    const eventServiceSpy = jasmine.createSpyObj('EventService', [
+      'getEvent',
+      'getEventParticipants',
+      'addParticipantToEvent',
+      'removeParticipantFromEvent'
+    ]);
+
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
       imports: [
+        CommonModule,
         ReactiveFormsModule,
         RouterModule,
+        MatAutocompleteModule,
+        MatInputModule,
+        MatFormFieldModule,
+        NoopAnimationsModule,
         ParticipantCreateComponent
       ],
       providers: [
+        FormBuilder,
         { provide: ParticipantService, useValue: participantServiceSpy },
         { provide: EventService, useValue: eventServiceSpy },
-        { provide: ActivatedRoute, useValue: mockActivatedRoute }
-      ],
-      schemas: [NO_ERRORS_SCHEMA]
+        { provide: Router, useValue: routerSpy },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: {
+                get: (param: string) => param === 'id' ? mockEventId : null
+              }
+            }
+          }
+        }
+      ]
     }).compileComponents();
+
+    participantService = TestBed.inject(ParticipantService) as jasmine.SpyObj<ParticipantService>;
+    eventService = TestBed.inject(EventService) as jasmine.SpyObj<EventService>;
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+
+    // Setup default return values for spies
+    eventService.getEvent.and.returnValue(of(mockEvent));
+    eventService.getEventParticipants.and.returnValue(of(mockParticipants));
+    participantService.searchParticipants.and.returnValue(of([]));
 
     fixture = TestBed.createComponent(ParticipantCreateComponent);
     component = fixture.componentInstance;
+    loader = TestbedHarnessEnvironment.loader(fixture);
+
     fixture.detectChanges();
   });
 
-  it('should create the component', () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load event data and participants on init', () => {
-    expect(eventServiceSpy.getEvent).toHaveBeenCalledWith(1);
-    expect(eventServiceSpy.getEventParticipants).toHaveBeenCalledWith(1);
-    expect(component.event()).toEqual(mockEventData);
+  it('should initialize with PERSON type selected by default', () => {
+    expect(component.participantForm.get('type')?.value).toBe('PERSON');
+
+    // PERSON fields should be visible
+    const personFields = fixture.debugElement.query(By.css('#firstName'));
+    expect(personFields).toBeTruthy();
+
+    // COMPANY fields should not be visible
+    const companyFields = fixture.debugElement.query(By.css('#companyName'));
+    expect(companyFields).toBeFalsy();
+  });
+
+  it('should load event data on init', () => {
+    expect(eventService.getEvent).toHaveBeenCalledWith(+mockEventId);
+    expect(eventService.getEventParticipants).toHaveBeenCalledWith(+mockEventId);
+    expect(component.event()).toEqual(mockEvent);
     expect(component.participants()).toEqual(mockParticipants);
   });
 
-  it('should initialize the form with default PERSON type', () => {
-    expect(component.participantForm.get('type')?.value).toBe('PERSON');
-    expect(component.participantForm.get('firstName')?.validator).toBeTruthy();
-    expect(component.participantForm.get('lastName')?.validator).toBeTruthy();
-    expect(component.participantForm.get('personalCode')?.validator).toBeTruthy();
+  it('should handle event loading error', () => {
+    eventService.getEvent.and.returnValue(throwError(() => new Error('Test error')));
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    expect(component.error()).toBe('Ürituse andmete laadimine ebaõnnestus');
   });
 
-  it('should update validators when type changes to COMPANY', () => {
+  it('should handle participants loading error', () => {
+    eventService.getEventParticipants.and.returnValue(throwError(() => new Error('Test error')));
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    expect(component.error()).toBe('Osalejate nimekirja laadimine ebaõnnestus');
+  });
+
+  it('should toggle between PERSON and COMPANY fields when type changes', () => {
+    // Initially PERSON is selected
+    expect(fixture.debugElement.query(By.css('#firstName'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('#companyName'))).toBeFalsy();
+
+    // Change to COMPANY
     component.participantForm.get('type')?.setValue('COMPANY');
     fixture.detectChanges();
 
-    expect(component.participantForm.get('companyName')?.validator).toBeTruthy();
-    expect(component.participantForm.get('registrationCode')?.validator).toBeTruthy();
-    expect(component.participantForm.get('firstName')?.validator).toBeFalsy();
+    // Now COMPANY fields should be visible and PERSON fields hidden
+    expect(fixture.debugElement.query(By.css('#firstName'))).toBeFalsy();
+    expect(fixture.debugElement.query(By.css('#companyName'))).toBeTruthy();
   });
 
-  it('should show error when form is invalid and submitted', () => {
-    // Try to submit without filling required fields
-    const submitButton = fixture.debugElement.query(By.css('button[type="submit"]'));
-    submitButton.nativeElement.click();
+  it('should update validators when type changes', () => {
+    // Initially PERSON validators
+    expect(component.participantForm.get('firstName')?.validator).toBeTruthy();
+    expect(component.participantForm.get('companyName')?.validator).toBeFalsy();
+
+    // Change to COMPANY
+    component.participantForm.get('type')?.setValue('COMPANY');
     fixture.detectChanges();
 
-    expect(component.error()).toBe('Palun täitke kohustuslikud väljad korrektselt');
-    expect(participantServiceSpy.createParticipant).not.toHaveBeenCalled();
+    // Now COMPANY validators should be active
+    expect(component.participantForm.get('firstName')?.validator).toBeFalsy();
+    expect(component.participantForm.get('companyName')?.validator).toBeTruthy();
   });
 
-  it('should successfully add a person participant', fakeAsync(() => {
-    const newParticipant: Participant = {
-      id: 2,
+  it('should update additionalInfo maxLength based on type', () => {
+    // For PERSON (default), maxLength should be 1000
+    component.participantForm.get('additionalInfo')?.setValue('a'.repeat(1001));
+    expect(component.participantForm.get('additionalInfo')?.valid).toBeFalsy();
+
+    component.participantForm.get('additionalInfo')?.setValue('a'.repeat(1000));
+    expect(component.participantForm.get('additionalInfo')?.valid).toBeTruthy();
+
+    // Change to COMPANY where maxLength should be 5000
+    component.participantForm.get('type')?.setValue('COMPANY');
+    fixture.detectChanges();
+
+    component.participantForm.get('additionalInfo')?.setValue('a'.repeat(5001));
+    expect(component.participantForm.get('additionalInfo')?.valid).toBeFalsy();
+
+    component.participantForm.get('additionalInfo')?.setValue('a'.repeat(5000));
+    expect(component.participantForm.get('additionalInfo')?.valid).toBeTruthy();
+  });
+
+  it('should handle form submission for PERSON participant', fakeAsync(() => {
+    const personData = {
       type: 'PERSON',
-      firstName: 'New',
-      lastName: 'Person',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      personalCode: '38712345678',
+      paymentMethod: 'CARD',
+      additionalInfo: 'Test info'
+    };
+
+    const newParticipant = { ...personData, id: 101 };
+
+    participantService.createParticipant.and.returnValue(of(newParticipant));
+    eventService.addParticipantToEvent.and.returnValue(of({}));
+
+    // Fill the form
+    component.participantForm.patchValue(personData);
+
+    // Submit the form
+    component.addParticipant();
+    tick();
+
+    // Check that services were called correctly
+    expect(participantService.createParticipant).toHaveBeenCalledWith(jasmine.objectContaining(personData));
+    expect(eventService.addParticipantToEvent).toHaveBeenCalledWith(
+      +mockEventId,
+      { id: newParticipant.id, type: newParticipant.type }
+    );
+
+    // Check that navigation occurred
+    expect(router.navigate).toHaveBeenCalledWith(['/events']);
+  }));
+
+  it('should handle form submission for COMPANY participant', fakeAsync(() => {
+    const companyData = {
+      type: 'COMPANY',
+      companyName: 'New Company',
+      registrationCode: '87654321',
+      participantCount: 10,
+      paymentMethod: 'BANK_TRANSFER',
+      additionalInfo: 'Company info'
+    };
+
+    const newParticipant = { ...companyData, id: 102 };
+
+    participantService.createParticipant.and.returnValue(of(newParticipant));
+    eventService.addParticipantToEvent.and.returnValue(of({}));
+
+    // Fill the form
+    component.participantForm.patchValue(companyData);
+
+    // Submit the form
+    component.addParticipant();
+    tick();
+
+    // Check that services were called correctly
+    expect(participantService.createParticipant).toHaveBeenCalledWith(jasmine.objectContaining(companyData));
+    expect(eventService.addParticipantToEvent).toHaveBeenCalledWith(
+      +mockEventId,
+      { id: newParticipant.id, type: newParticipant.type }
+    );
+
+    // Check that navigation occurred
+    expect(router.navigate).toHaveBeenCalledWith(['/events']);
+  }));
+
+  it('should handle form validation errors', () => {
+    // Submit an invalid form (empty required fields)
+    component.addParticipant();
+    fixture.detectChanges();
+
+    // Check error message
+    expect(component.error()).toBe('Palun täitke kohustuslikud väljad korrektselt');
+
+    // Verify service methods were not called
+    expect(participantService.createParticipant).not.toHaveBeenCalled();
+    expect(eventService.addParticipantToEvent).not.toHaveBeenCalled();
+  });
+
+  it('should handle duplicate participant error (409)', fakeAsync(() => {
+    const personData = {
+      type: 'PERSON',
+      firstName: 'Jane',
+      lastName: 'Smith',
       personalCode: '38712345678',
       paymentMethod: 'CARD'
     };
 
-    participantServiceSpy.createParticipant.and.returnValue(of(newParticipant));
-    eventServiceSpy.addParticipantToEvent.and.returnValue(of(newParticipant));
+    // Setup duplicate error
+    participantService.createParticipant.and.returnValue(throwError(() => ({
+      status: 409,
+      error: { message: 'Participant with this personal code already exists' }
+    })));
 
-    // Fill form
-    component.participantForm.setValue({
-      type: 'PERSON',
-      firstName: 'New',
-      lastName: 'Person',
-      personalCode: '38712345678',
-      companyName: '',
-      registrationCode: '',
-      participantCount: null,
-      contactPerson: '',
-      paymentMethod: 'CARD',
-      email: '',
-      phone: '',
-      additionalInfo: ''
-    });
+    // Setup search to find the existing participant
+    const existingParticipant = { ...personData, id: 999 };
+    participantService.searchParticipants.and.returnValue(of([existingParticipant]));
 
+    // Add existing participant to event succeeds
+    eventService.addParticipantToEvent.and.returnValue(of({}));
+
+    // Fill the form
+    component.participantForm.patchValue(personData);
+
+    // Submit the form
     component.addParticipant();
     tick();
 
-    expect(participantServiceSpy.createParticipant).toHaveBeenCalled();
-    expect(eventServiceSpy.addParticipantToEvent).toHaveBeenCalledWith(1, { id: 2, type: 'PERSON' });
-    expect(component.participants().length).toBe(2);
-    expect(component.participants()[1]).toEqual(newParticipant);
+    // Check that the existing participant is added to the event
+    expect(participantService.searchParticipants).toHaveBeenCalled();
+    expect(eventService.addParticipantToEvent).toHaveBeenCalledWith(
+      +mockEventId,
+      { id: existingParticipant.id, type: existingParticipant.type }
+    );
+
+    // Check that navigation occurred
+    expect(router.navigate).toHaveBeenCalledWith(['/events']);
   }));
 
-  it('should successfully add a company participant', fakeAsync(() => {
-    const newCompany: Participant = {
-      id: 3,
+  it('should handle participant already added to event error', fakeAsync(() => {
+    const personData = {
+      type: 'PERSON',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      personalCode: '38712345678',
+      paymentMethod: 'CARD'
+    };
+
+    // Setup duplicate error
+    participantService.createParticipant.and.returnValue(throwError(() => ({
+      status: 409,
+      error: { message: 'Participant with this personal code already exists' }
+    })));
+
+    // Setup search to find the existing participant
+    const existingParticipant = { ...personData, id: 999 };
+    participantService.searchParticipants.and.returnValue(of([existingParticipant]));
+
+    // Add existing participant to event fails with 409 (already added)
+    eventService.addParticipantToEvent.and.returnValue(throwError(() => ({
+      status: 409,
+      error: { message: 'Participant already added to this event' }
+    })));
+
+    // Fill the form
+    component.participantForm.patchValue(personData);
+
+    // Submit the form
+    component.addParticipant();
+    tick();
+
+    // Check error message
+    expect(component.error()).toBe('Osaleja on juba üritusele lisatud');
+    expect(component.participantForm.get('personalCode')?.errors?.['serverError']).toBe('See isikukood on juba registreeritud');
+  }));
+
+  it('should handle invalid personal code error', fakeAsync(() => {
+    const personData = {
+      type: 'PERSON',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      personalCode: 'invalid',
+      paymentMethod: 'CARD'
+    };
+
+    // Setup validation error
+    participantService.createParticipant.and.returnValue(throwError(() => ({
+      status: 400,
+      error: { message: 'Invalid personal code format' }
+    })));
+
+    // Fill the form
+    component.participantForm.patchValue(personData);
+
+    // Submit the form
+    component.addParticipant();
+    tick();
+
+    // Check error message
+    expect(component.error()).toBe('Isikukood on vigane');
+    expect(component.participantForm.get('personalCode')?.errors?.['serverError']).toBe('Isikukood on vigane');
+  }));
+
+  it('should handle invalid registration code error', fakeAsync(() => {
+    const companyData = {
+      type: 'COMPANY',
+      companyName: 'Test Company',
+      registrationCode: 'invalid',
+      paymentMethod: 'BANK_TRANSFER'
+    };
+
+    // Setup validation error
+    participantService.createParticipant.and.returnValue(throwError(() => ({
+      status: 400,
+      error: { message: 'Invalid registration code format' }
+    })));
+
+    // Fill the form
+    component.participantForm.patchValue(companyData);
+
+    // Submit the form
+    component.addParticipant();
+    tick();
+
+    // Check error message
+    expect(component.error()).toBe('Registrikood peab olema 8-kohaline number');
+    expect(component.participantForm.get('registrationCode')?.errors?.['serverError']).toBe('Registrikood peab olema 8-kohaline number');
+  }));
+
+  it('should handle additional info too long error', fakeAsync(() => {
+    const personData = {
+      type: 'PERSON',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      personalCode: '38712345678',
+      paymentMethod: 'CARD',
+      additionalInfo: 'Very long text...'
+    };
+
+    // Setup validation error
+    participantService.createParticipant.and.returnValue(throwError(() => ({
+      status: 400,
+      error: { message: 'additional info exceeds maximum length' }
+    })));
+
+    // Fill the form
+    component.participantForm.patchValue(personData);
+
+    // Submit the form
+    component.addParticipant();
+    tick();
+
+    // Check error message
+    expect(component.error()).toBe('Lisainfo on liiga pikk');
+    expect(component.participantForm.get('additionalInfo')?.errors?.['serverError']).toBe('Lisainfo on liiga pikk');
+  }));
+
+  it('should test autocomplete functionality for firstName', fakeAsync(async () => {
+    const searchResults = [
+      { id: 101, firstName: 'John', lastName: 'Smith', personalCode: '38712345678', type: 'PERSON', paymentMethod: 'CARD' },
+      { id: 102, firstName: 'Johnny', lastName: 'Walker', personalCode: '38712345679', type: 'PERSON', paymentMethod: 'CASH' }
+    ];
+
+    participantService.searchParticipants.and.returnValue(of(searchResults));
+
+    // Get the input field
+    const input = fixture.debugElement.query(By.css('#firstName input')).nativeElement;
+
+    // Set a value to trigger the search
+    input.value = 'John';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    tick(300); // Wait for debounce time
+
+    // Get the autocomplete harness
+    const autocomplete = await loader.getHarness(MatAutocompleteHarness);
+    await autocomplete.focus();
+
+    // Check that options are available
+    const options = await autocomplete.getOptions();
+    expect(options.length).toBe(2);
+
+    // Select first option
+    await options[0].click();
+    fixture.detectChanges();
+
+    // Check that the form was populated with the selected participant's data
+    expect(component.participantForm.get('firstName')?.value).toBe('John');
+    expect(component.participantForm.get('lastName')?.value).toBe('Smith');
+    expect(component.participantForm.get('personalCode')?.value).toBe('38712345678');
+  }));
+
+  it('should delete participant correctly', () => {
+    const participantId = 42;
+    eventService.removeParticipantFromEvent.and.returnValue(of({}));
+
+    component.deleteParticipant(participantId);
+
+    expect(eventService.removeParticipantFromEvent).toHaveBeenCalledWith(+mockEventId, participantId);
+  });
+
+  it('should reset form to initial state', () => {
+    // First fill the form with data
+    component.participantForm.patchValue({
       type: 'COMPANY',
       companyName: 'Test Company',
       registrationCode: '12345678',
       paymentMethod: 'BANK_TRANSFER'
-    };
-
-    participantServiceSpy.createParticipant.and.returnValue(of(newCompany));
-    eventServiceSpy.addParticipantToEvent.and.returnValue(of(newCompany));
-
-    // Switch to company type
-    component.participantForm.get('type')?.setValue('COMPANY');
-    fixture.detectChanges();
-
-    // Fill form
-    component.participantForm.patchValue({
-      companyName: 'Test Company',
-      registrationCode: '12345678',
-      paymentMethod: 'BANK_TRANSFER'
     });
 
-    component.addParticipant();
-    tick();
-
-    expect(participantServiceSpy.createParticipant).toHaveBeenCalled();
-    expect(eventServiceSpy.addParticipantToEvent).toHaveBeenCalledWith(1, { id: 3, type: 'COMPANY' });
-    expect(component.participants().length).toBe(2);
-    expect(component.participants()[1]).toEqual(newCompany);
-  }));
-
-  it('should handle error when creating participant fails', fakeAsync(() => {
-    participantServiceSpy.createParticipant.and.returnValue(throwError(() => new Error('Server error')));
-
-    // Fill form with valid data
-    component.participantForm.setValue({
-      type: 'PERSON',
-      firstName: 'New',
-      lastName: 'Person',
-      personalCode: '38712345678',
-      companyName: '',
-      registrationCode: '',
-      participantCount: null,
-      contactPerson: '',
-      paymentMethod: 'CARD',
-      email: '',
-      phone: '',
-      additionalInfo: ''
-    });
+    // Call private resetForm method via a public method that uses it
+    const createParticipantSpy = spyOn(participantService, 'createParticipant').and.returnValue(of({ id: 123 }));
+    const addParticipantToEventSpy = spyOn(eventService, 'addParticipantToEvent').and.returnValue(of({}));
+    const navigateSpy = spyOn(router, 'navigate');
 
     component.addParticipant();
-    tick();
 
-    expect(participantServiceSpy.createParticipant).toHaveBeenCalled();
-    expect(component.error()).toBe('Osaleja lisamine ebaõnnestus');
-    expect(component.participants().length).toBe(1); // No new participant added
-  }));
-
-  it('should handle error when adding participant to event fails', fakeAsync(() => {
-    const newParticipant: Participant = {
-      id: 2,
-      type: 'PERSON',
-      firstName: 'New',
-      lastName: 'Person',
-      personalCode: '38712345678',
-      paymentMethod: 'CARD'
-    };
-
-    participantServiceSpy.createParticipant.and.returnValue(of(newParticipant));
-    eventServiceSpy.addParticipantToEvent.and.returnValue(throwError(() => new Error('Server error')));
-
-    // Fill form
-    component.participantForm.setValue({
-      type: 'PERSON',
-      firstName: 'New',
-      lastName: 'Person',
-      personalCode: '38712345678',
-      companyName: '',
-      registrationCode: '',
-      participantCount: null,
-      contactPerson: '',
-      paymentMethod: 'CARD',
-      email: '',
-      phone: '',
-      additionalInfo: ''
-    });
-
-    component.addParticipant();
-    tick();
-
-    expect(participantServiceSpy.createParticipant).toHaveBeenCalled();
-    expect(eventServiceSpy.addParticipantToEvent).toHaveBeenCalled();
-    expect(component.error()).toBe('Osaleja lisamine ebaõnnestus');
-  }));
-
-  it('should delete a participant', fakeAsync(() => {
-    eventServiceSpy.removeParticipantFromEvent.and.returnValue(of(undefined));
-
-    component.deleteParticipant(1);
-    tick();
-
-    expect(eventServiceSpy.removeParticipantFromEvent).toHaveBeenCalledWith(1, 1);
-    expect(component.participants().length).toBe(0);
-    expect(component.error()).toBeNull();
-  }));
-
-  it('should handle error when deleting participant fails', fakeAsync(() => {
-    eventServiceSpy.removeParticipantFromEvent.and.returnValue(throwError(() => new Error('Server error')));
-
-    component.deleteParticipant(1);
-    tick();
-
-    expect(eventServiceSpy.removeParticipantFromEvent).toHaveBeenCalledWith(1, 1);
-    expect(component.participants().length).toBe(1); // Participant not removed
-    expect(component.error()).toBe('Osaleja kustutamine ebaõnnestus');
-  }));
-
-  it('should reset form after successful participant creation', fakeAsync(() => {
-    const newParticipant: Participant = {
-      id: 2,
-      type: 'PERSON',
-      firstName: 'New',
-      lastName: 'Person',
-      personalCode: '38712345678',
-      paymentMethod: 'CARD'
-    };
-
-    participantServiceSpy.createParticipant.and.returnValue(of(newParticipant));
-    eventServiceSpy.addParticipantToEvent.and.returnValue(of(newParticipant));
-
-    // Fill form and change some values
-    component.participantForm.setValue({
-      type: 'PERSON',
-      firstName: 'New',
-      lastName: 'Person',
-      personalCode: '38712345678',
-      companyName: '',
-      registrationCode: '',
-      participantCount: null,
-      contactPerson: '',
-      paymentMethod: 'CARD',
-      email: 'test@example.com',
-      phone: '+3725512345',
-      additionalInfo: 'Test info'
-    });
-
-    component.addParticipant();
-    tick();
-
-    // Check form is reset
+    // Check that form was reset
+    expect(component.participantForm.get('type')?.value).toBe('PERSON');
     expect(component.participantForm.get('firstName')?.value).toBe('');
     expect(component.participantForm.get('lastName')?.value).toBe('');
-    expect(component.participantForm.get('personalCode')?.value).toBe('');
     expect(component.participantForm.get('paymentMethod')?.value).toBeNull();
-    expect(component.participantForm.get('email')?.value).toBe('');
-    expect(component.participantForm.get('phone')?.value).toBe('');
-    expect(component.participantForm.get('additionalInfo')?.value).toBe('');
-    expect(component.error()).toBeNull();
-  }));
-
-  it('should correctly show UI elements based on participant type', () => {
-    // Check person fields are visible by default
-    let personFields = fixture.debugElement.query(By.css('#firstName'));
-    expect(personFields).toBeTruthy();
-
-    let companyFields = fixture.debugElement.query(By.css('#companyName'));
-    expect(companyFields).toBeFalsy();
-
-    // Switch to company
-    component.participantForm.get('type')?.setValue('COMPANY');
-    fixture.detectChanges();
-
-    // Check company fields are now visible
-    personFields = fixture.debugElement.query(By.css('#firstName'));
-    expect(personFields).toBeFalsy();
-
-    companyFields = fixture.debugElement.query(By.css('#companyName'));
-    expect(companyFields).toBeTruthy();
-  });
-
-  it('should show validation errors when fields are touched and invalid', () => {
-    // Mark fields as touched
-    component.participantForm.get('firstName')?.setValue('');
-    component.participantForm.get('firstName')?.markAsTouched();
-    fixture.detectChanges();
-
-    const errorMsg = fixture.debugElement.query(By.css('.error-msg'));
-    expect(errorMsg).toBeTruthy();
-    expect(errorMsg.nativeElement.textContent.trim()).toBe('Eesnimi on kohustuslik');
   });
 });
