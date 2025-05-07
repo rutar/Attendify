@@ -12,11 +12,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 @RequiredArgsConstructor
 public class ParticipantServiceImpl implements ParticipantService {
     private final ParticipantRepository participantRepository;
+
+    private static final int PERSON_ADDITIONAL_INFO_MAX_LENGTH = 1000;
+    private static final int COMPANY_ADDITIONAL_INFO_MAX_LENGTH = 5000;
 
     @Override
     public Page<Participant> getAllParticipants(Pageable pageable) {
@@ -32,21 +34,27 @@ public class ParticipantServiceImpl implements ParticipantService {
     @Override
     @Transactional
     public Participant createParticipant(Participant participant) {
-        if (participant instanceof Person person) {
-            validateEstonianPersonalCode(person.getPersonalCode());
-            if (participantRepository.existsByPersonalCode(person.getPersonalCode())) {
-                throw new DuplicateResourceException("Person with this personal code already exists");
+        switch (participant) {
+            case null -> throw new IllegalArgumentException("Participant cannot be null");
+            case Person person -> {
+                validateEstonianPersonalCode(person.getPersonalCode());
+                validateAdditionalInfoLength(person.getAdditionalInfo(), PERSON_ADDITIONAL_INFO_MAX_LENGTH, "Person");
+                if (participantRepository.existsByPersonalCode(person.getPersonalCode())) {
+                    throw new DuplicateResourceException("Person with this personal code already exists");
+                }
             }
-        } else if (participant instanceof Company company) {
-            validateRegistrationCode(company.getRegistrationCode());
-            if (participantRepository.existsByRegistrationCode(company.getRegistrationCode())) {
-                throw new DuplicateResourceException("Company with this registration code already exists");
+            case Company company -> {
+                validateRegistrationCode(company.getRegistrationCode());
+                validateAdditionalInfoLength(company.getAdditionalInfo(), COMPANY_ADDITIONAL_INFO_MAX_LENGTH, "Company");
+                if (participantRepository.existsByRegistrationCode(company.getRegistrationCode())) {
+                    throw new DuplicateResourceException("Company with this registration code already exists");
+                }
+                if (company.getParticipantCount() == null || company.getParticipantCount() < 1) {
+                    company.setParticipantCount(1);
+                }
             }
-            if (company.getParticipantCount() == null || company.getParticipantCount() < 1) {
-                company.setParticipantCount(1);
-            }
-        } else {
-            throw new IllegalArgumentException("Unknown participant type: " + participant.getClass().getName());
+            default ->
+                    throw new IllegalArgumentException("Unknown participant type: " + participant.getClass().getName());
         }
         return participantRepository.save(participant);
     }
@@ -54,6 +62,9 @@ public class ParticipantServiceImpl implements ParticipantService {
     @Override
     @Transactional
     public Participant updateParticipant(Long id, Participant participantDetails) {
+        if (participantDetails == null) {
+            throw new IllegalArgumentException("Participant details cannot be null");
+        }
         Participant participant = getParticipantById(id);
 
         if (participant.getClass() != participantDetails.getClass()) {
@@ -62,9 +73,15 @@ public class ParticipantServiceImpl implements ParticipantService {
         }
 
         participant.setPaymentMethod(participantDetails.getPaymentMethod());
+        if (participant instanceof Person) {
+            validateAdditionalInfoLength(participantDetails.getAdditionalInfo(), PERSON_ADDITIONAL_INFO_MAX_LENGTH, "Person");
+        } else if (participant instanceof Company) {
+            validateAdditionalInfoLength(participantDetails.getAdditionalInfo(), COMPANY_ADDITIONAL_INFO_MAX_LENGTH, "Company");
+        }
         participant.setAdditionalInfo(participantDetails.getAdditionalInfo());
 
         if (participant instanceof Person person && participantDetails instanceof Person personDetails) {
+            validateEstonianPersonalCode(personDetails.getPersonalCode());
             if (!person.getPersonalCode().equals(personDetails.getPersonalCode()) &&
                     participantRepository.existsByPersonalCode(personDetails.getPersonalCode())) {
                 throw new DuplicateResourceException("Person with this personal code already exists");
@@ -72,7 +89,10 @@ public class ParticipantServiceImpl implements ParticipantService {
             person.setFirstName(personDetails.getFirstName());
             person.setLastName(personDetails.getLastName());
             person.setPersonalCode(personDetails.getPersonalCode());
+            person.setEmail(personDetails.getEmail());
+            person.setPhone(personDetails.getPhone());
         } else if (participant instanceof Company company && participantDetails instanceof Company companyDetails) {
+            validateRegistrationCode(companyDetails.getRegistrationCode());
             if (!company.getRegistrationCode().equals(companyDetails.getRegistrationCode()) &&
                     participantRepository.existsByRegistrationCode(companyDetails.getRegistrationCode())) {
                 throw new DuplicateResourceException("Company with this registration code already exists");
@@ -81,6 +101,8 @@ public class ParticipantServiceImpl implements ParticipantService {
             company.setRegistrationCode(companyDetails.getRegistrationCode());
             company.setParticipantCount(companyDetails.getParticipantCount());
             company.setContactPerson(companyDetails.getContactPerson());
+            company.setEmail(companyDetails.getEmail());
+            company.setPhone(companyDetails.getPhone());
         }
 
         return participantRepository.save(participant);
@@ -110,6 +132,9 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     void validateEstonianPersonalCode(String personalCode) {
+        if (personalCode == null) {
+            throw new IllegalArgumentException("Personal code cannot be null");
+        }
         if (!personalCode.matches("^[0-6]\\d{10}$")) {
             throw new IllegalArgumentException("Invalid Estonian personal code format");
         }
@@ -138,8 +163,17 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     void validateRegistrationCode(String registrationCode) {
+        if (registrationCode == null) {
+            throw new IllegalArgumentException("Registration code cannot be null");
+        }
         if (!registrationCode.matches("^\\d{8}$")) {
             throw new IllegalArgumentException("Invalid registration code format: must be 8 digits");
+        }
+    }
+
+    private void validateAdditionalInfoLength(String additionalInfo, int maxLength, String participantType) {
+        if (additionalInfo != null && additionalInfo.length() > maxLength) {
+            throw new IllegalArgumentException(participantType + " additional info exceeds maximum length of " + maxLength + " characters");
         }
     }
 }
