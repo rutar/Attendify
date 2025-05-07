@@ -25,7 +25,6 @@ export class AppComponent {
 
   currentRoute = signal('');
 
-  // Условия для маршрутов
   showEvents = computed(() => this.currentRoute() === '/events');
   showAddEvent = computed(() => this.currentRoute() === '/events/new');
   showParticipant = computed(() => /^\/participants\/[^/]+/.test(this.currentRoute()));

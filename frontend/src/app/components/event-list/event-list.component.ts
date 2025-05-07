@@ -28,7 +28,7 @@ export class EventListComponent implements OnInit {
       next: () => {
         this.futureEvents = this.eventService.getFutureEvents();
         this.pastEvents = this.eventService.getPastEvents();
-        console.log("Past events: " + this.pastEvents.name);
+        //console.log("Past events: " + this.pastEvents.name);
         this.error.set(null);
       },
       error: (err) => {
@@ -39,17 +39,17 @@ export class EventListComponent implements OnInit {
   }
 
   openDeleteModal(event: EventData): void {
-    console.log('Opening delete modal for event:', event);
+    //console.log('Opening delete modal for event:', event);
     this.eventToDelete = event;
   }
 
   closeDeleteModal(): void {
-    console.log('Closing delete modal');
+    //console.log('Closing delete modal');
     this.eventToDelete = null;
   }
 
   confirmDelete(): void {
-    console.log('Confirming delete for event:', this.eventToDelete);
+    //console.log('Confirming delete for event:', this.eventToDelete);
     if (this.eventToDelete && this.eventToDelete.id !== undefined) {
       this.removeEvent(this.eventToDelete);
       this.eventToDelete = null;

@@ -34,7 +34,7 @@ export class EventService {
       .get<{ futureEvents: EventData[]; pastEvents: EventData[] }>(this.eventsApiUrl)
       .pipe(
         tap((data) => {
-          console.log('Fetched events:', data);
+          //console.log('Fetched events:', data);
           this.futureEvents.set(data.futureEvents);
           this.pastEvents.set(data.pastEvents);
         }),

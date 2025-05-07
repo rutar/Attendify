@@ -64,7 +64,7 @@ export class ParticipantService {
       url += `?${queryParams.join('&')}`;
     }
 
-    console.log('Search URL:', url);
+    //console.log('Search URL:', url);
     return this.http.get<{ content: Participant[] }>(url).pipe(
       map((response) => {
         // Extract content array, ensure it's an array

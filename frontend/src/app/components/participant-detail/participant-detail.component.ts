@@ -6,6 +6,7 @@ import { ParticipantService } from '../../services/participant.service';
 import { Participant } from '../../models/participant.model';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import {mapFormToParticipant} from '../../utils/form-utils';
 
 interface ErrorMessages {
   participant_load_failed: string;
@@ -80,7 +81,7 @@ export class ParticipantDetailComponent implements OnInit {
     this.participantForm.get('type')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe((type) => {
-        console.log('Type changed to:', type);
+        //console.log('Type changed to:', type);
         this.updateValidators(type);
         this.updateAdditionalInfoValidator(type);
       });
@@ -93,7 +94,7 @@ export class ParticipantDetailComponent implements OnInit {
       )
       .subscribe(() => {
         if (this.error()) {
-          console.log('Clearing general error due to form change');
+          //console.log('Clearing general error due to form change');
           this.error.set(null);
           this.cdr.detectChanges();
         }
@@ -109,7 +110,7 @@ export class ParticipantDetailComponent implements OnInit {
         .subscribe(() => {
           const control = this.participantForm.get(field);
           if (control?.errors?.['serverError']) {
-            console.log(`Clearing server error for ${field}`);
+            //console.log(`Clearing server error for ${field}`);
             control.setErrors(null);
             this.cdr.detectChanges();
           }
@@ -120,7 +121,7 @@ export class ParticipantDetailComponent implements OnInit {
       this.participantService.getParticipant(Number(id)).subscribe({
         next: (participant) => {
           if (participant) {
-            console.log('Loaded participant type:', participant.type);
+            //console.log('Loaded participant type:', participant.type);
             if (participant.type !== 'PERSON' && participant.type !== 'COMPANY') {
               console.error('Invalid participant type received:', participant.type);
               this.error.set(this.errorMessages.unknown_participant_type);
@@ -141,13 +142,13 @@ export class ParticipantDetailComponent implements OnInit {
               phone: participant.phone,
               additionalInfo: participant.additionalInfo
             });
-            console.log('Type after patchValue:', this.participantForm.get('type')?.value);
+            //console.log('Type after patchValue:', this.participantForm.get('type')?.value);
             this.updateValidators(participant.type);
             this.updateAdditionalInfoValidator(participant.type);
             // Disable type field in edit mode to prevent mismatch
             this.participantForm.get('type')?.disable();
-            console.log('Type after disable:', this.participantForm.get('type')?.value);
-            console.log('Form raw value:', this.participantForm.getRawValue());
+            //console.log('Type after disable:', this.participantForm.get('type')?.value);
+            //console.log('Form raw value:', this.participantForm.getRawValue());
           } else {
             this.error.set(this.errorMessages.participant_load_failed);
             this.cdr.detectChanges();
@@ -212,12 +213,12 @@ export class ParticipantDetailComponent implements OnInit {
       this.error.set(this.errorMessages.invalid_form);
       this.participantForm.markAllAsTouched();
       this.cdr.detectChanges();
-      console.log('Form invalid, errors:', this.participantForm.errors);
+      //console.log('Form invalid, errors:', this.participantForm.errors);
       return;
     }
 
     const formValue = this.participantForm.getRawValue();
-    console.log('Submitting participant with type (raw value):', formValue.type);
+    //console.log('Submitting participant with type (raw value):', formValue.type);
     if (!formValue.type || (formValue.type !== 'PERSON' && formValue.type !== 'COMPANY')) {
       console.error('Invalid or undefined form type before submission:', formValue.type);
       this.error.set(this.errorMessages.undefined_participant_type);
@@ -225,20 +226,7 @@ export class ParticipantDetailComponent implements OnInit {
       return;
     }
 
-    const participant: Participant = {
-      type: formValue.type,
-      firstName: formValue.type === 'PERSON' ? formValue.firstName : undefined,
-      lastName: formValue.type === 'PERSON' ? formValue.lastName : undefined,
-      personalCode: formValue.type === 'PERSON' ? formValue.personalCode : undefined,
-      companyName: formValue.type === 'COMPANY' ? formValue.companyName : undefined,
-      registrationCode: formValue.type === 'COMPANY' ? formValue.registrationCode : undefined,
-      participantCount: formValue.participantCount || undefined,
-      contactPerson: formValue.contactPerson || undefined,
-      paymentMethod: formValue.paymentMethod,
-      email: formValue.email || undefined,
-      phone: formValue.phone || undefined,
-      additionalInfo: formValue.additionalInfo || undefined
-    };
+    const participant: Participant =  mapFormToParticipant(formValue)
 
     const id = Number(this.route.snapshot.paramMap.get('id'));
     participant.id = id;
@@ -258,11 +246,11 @@ export class ParticipantDetailComponent implements OnInit {
   }
 
   private handleServerError(err: any, formValue: any): void {
-    console.log('Handling server error:', {
+    /*console.log('Handling server error:', {
       status: err.status,
       error: err.error,
       message: err.message
-    });
+    });*/
 
     const errorMessage = typeof err.error === 'object' && err.error?.message
       ? err.error.message
@@ -280,7 +268,7 @@ export class ParticipantDetailComponent implements OnInit {
           ? this.errorMessages.duplicate_personal_code
           : this.errorMessages.duplicate_registration_code });
       control?.markAsTouched();
-      console.log(`${isPerson ? 'personalCode' : 'registrationCode'} errors:`, control?.errors);
+      //console.log(`${isPerson ? 'personalCode' : 'registrationCode'} errors:`, control?.errors);
     } else if (err.status === 400) {
       if (errorMessage.includes('additional info exceeds maximum length')) {
         const maxLength = formValue.type === 'PERSON'
@@ -289,19 +277,19 @@ export class ParticipantDetailComponent implements OnInit {
         const control = this.participantForm.get('additionalInfo');
         control?.setErrors({ serverError: this.errorMessages.additional_info_too_long.replace('{max}', maxLength.toString()) });
         control?.markAsTouched();
-        console.log('additionalInfo errors:', control?.errors);
+        //console.log('additionalInfo errors:', control?.errors);
         this.error.set(this.errorMessages.additional_info_too_long.replace('{max}', maxLength.toString()));
       } else if (errorMessage.includes('personal code')) {
         const control = this.participantForm.get('personalCode');
         control?.setErrors({ serverError: this.errorMessages.invalid_personal_code });
         control?.markAsTouched();
-        console.log('personalCode errors:', control?.errors);
+        //console.log('personalCode errors:', control?.errors);
         this.error.set(this.errorMessages.invalid_personal_code);
       } else if (errorMessage.includes('registration code')) {
         const control = this.participantForm.get('registrationCode');
         control?.setErrors({ serverError: this.errorMessages.invalid_registration_code });
         control?.markAsTouched();
-        console.log('registrationCode errors:', control?.errors);
+        //console.log('registrationCode errors:', control?.errors);
         this.error.set(this.errorMessages.invalid_registration_code);
       } else if (errorMessage.includes('Participant type mismatch')) {
         const currentType = formValue.type === 'PERSON' ? 'Eraisik' : 'Ettevõte';
@@ -328,17 +316,12 @@ export class ParticipantDetailComponent implements OnInit {
 
   goBack(): void {
     const eventId = this.getEventId();
-    console.log('Retrieved event_id:', eventId);
+    //console.log('Retrieved event_id:', eventId);
     if (eventId) {
       this.router.navigate([`/events/${eventId}/participants`]);
     } else {
       console.warn('No event_id found, navigating to /events');
       this.router.navigate(['/events']);
     }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }

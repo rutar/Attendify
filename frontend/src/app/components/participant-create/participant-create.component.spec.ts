@@ -39,7 +39,7 @@ describe('ParticipantCreateComponent', () => {
   };
 
   beforeEach(async () => {
-    const participantServiceSpy = jasmine.createSpyObj('ParticipantService', ['createParticipant', 'searchParticipants', 'deleteParticipant']);
+    const participantServiceSpy = jasmine.createSpyObj('ParticipantService', ['createParticipant', 'searchParticipants']);
     const eventServiceSpy = jasmine.createSpyObj('EventService', ['getEvent', 'getEventParticipants', 'addParticipantToEvent', 'removeParticipantFromEvent']);
 
     await TestBed.configureTestingModule({
@@ -243,26 +243,6 @@ describe('ParticipantCreateComponent', () => {
     tick();
     expect(component.participantForm.get('personalCode')?.errors).toBeNull();
   }));
-
-  it('should delete participant successfully', () => {
-    fixture.detectChanges();
-    component.participants.set([mockParticipant]);
-    eventService.removeParticipantFromEvent.and.returnValue(of(undefined));
-
-    component.deleteParticipant(1);
-    expect(eventService.removeParticipantFromEvent).toHaveBeenCalledWith(1, 1);
-    expect(component.participants()).toEqual([]);
-  });
-
-  it('should handle participant deletion error', () => {
-    fixture.detectChanges();
-    component.participants.set([mockParticipant]);
-    eventService.removeParticipantFromEvent.and.returnValue(throwError(() => ({ status: 500 })));
-
-    component.deleteParticipant(1);
-    expect(component.error()).toBe('Osaleja kustutamine ebaõnnestus');
-    expect(component.participants()).toContain(mockParticipant);
-  });
 
   it('should clean up subscriptions on destroy', () => {
     fixture.detectChanges();

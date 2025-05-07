@@ -1,17 +1,29 @@
 import {Component, OnDestroy, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {ParticipantService} from '../../services/participant.service';
 import {EventService} from '../../services/event.service';
 import {EventData} from '../../models/event.model';
 import {Participant} from '../../models/participant.model';
-import {updateParticipantValidators} from '../../utils/form-utils';
-import {debounceTime, distinctUntilChanged, map, switchMap, takeUntil, tap} from 'rxjs/operators';
-import {Observable, of, Subject, throwError} from 'rxjs';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatInputModule} from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
+import {Observable, Subject, throwError} from 'rxjs';
+import {map, switchMap, takeUntil} from 'rxjs/operators';
+import {
+  DEFAULT_ERROR_MESSAGES,
+  createParticipantForm,
+  displayParticipantFn,
+  mapFormToParticipant,
+  patchParticipantFormValues,
+  resetParticipantForm,
+  setupCompanyNameAutocomplete,
+  setupFirstNameAutocomplete,
+  setupLastNameAutocomplete,
+  updateAdditionalInfoValidator,
+  updateParticipantValidators, loadEventAndParticipants
+} from '../../utils/form-utils';
 
 @Component({
   selector: 'app-participant-create',
@@ -31,30 +43,14 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
   event = signal<EventData | null>(null);
   participants = signal<Participant[]>([]);
   participantForm: FormGroup;
-  error = signal<string | null>(null);
+  error = signal<string | null| undefined>(null);
 
   filteredFirstNameOptions!: Observable<Participant[]>;
   filteredLastNameOptions!: Observable<Participant[]>;
   filteredCompanyNameOptions!: Observable<Participant[]>;
 
   private destroy$ = new Subject<void>();
-  private readonly PERSON_ADDITIONAL_INFO_MAX_LENGTH = 1000;
-  private readonly COMPANY_ADDITIONAL_INFO_MAX_LENGTH = 5000;
-
-  private errorMessages: ErrorMessages = {
-    event_load_failed: 'Ürituse andmete laadimine ebaõnnestus',
-    participants_load_failed: 'Osalejate nimekirja laadimine ebaõnnestus',
-    participant_add_failed: 'Osaleja lisamine ebaõnnestus',
-    participant_delete_failed: 'Osaleja kustutamine ebaõnnestus',
-    invalid_form: 'Palun täitke kohustuslikud väljad korrektselt',
-    participant_already_added: 'Osaleja on juba üritusele lisatud',
-    additional_info_too_long: 'Lisainfo on liiga pikk',
-    duplicate_personal_code: 'See isikukood on juba registreeritud',
-    duplicate_registration_code: 'See registrikood on juba registreeritud',
-    invalid_personal_code: 'Isikukood on vigane',
-    invalid_registration_code: 'Registrikood peab olema 8-kohaline number'
-  };
-
+  private readonly errorMessages = DEFAULT_ERROR_MESSAGES;
   eventId: string | null | undefined;
 
   constructor(
@@ -64,47 +60,42 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router
   ) {
-    this.participantForm = this.fb.group({
-      type: ['PERSON', Validators.required],
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      personalCode: ['', Validators.required],
-      companyName: [''],
-      registrationCode: ['', [Validators.pattern(/^\d{8}$/)]],
-      participantCount: [null, [Validators.min(1)]],
-      contactPerson: [''],
-      paymentMethod: [null, Validators.required],
-      email: [''],
-      phone: [''],
-      additionalInfo: ['', Validators.maxLength(this.PERSON_ADDITIONAL_INFO_MAX_LENGTH)]
-    });
+    this.participantForm = createParticipantForm(fb);
   }
 
   ngOnInit(): void {
-    this.eventId = this.route.snapshot.paramMap.get('id');
-    if (this.eventId) {
-      this.eventService.getEvent(+this.eventId).subscribe({
-        next: (event) => this.event.set(event),
-        error: (err) => {
-          console.error('Failed to load event:', err);
-          this.error.set(this.errorMessages.event_load_failed);
-        }
-      });
+    const routeParamId = this.route.snapshot.paramMap.get('id');
+    this.eventId = routeParamId ?? null;
 
-      this.eventService.getEventParticipants(+this.eventId).subscribe({
-        next: (participants) => this.participants.set(participants),
-        error: (err) => {
-          console.error('Failed to load participants:', err);
-          this.error.set(this.errorMessages.participants_load_failed);
-        }
-      });
-    }
 
+    this.loadEventData().subscribe(() => {
+      console.log('After loadEventData, participants:', this.participants());
+      this.setupAutocompleteFields();
+      this.setupFormListeners();
+    });
+
+
+  }
+
+  private loadEventData(): Observable<void> {
+    const routeParamId = this.route.snapshot.paramMap.get('id');
+    this.eventId = routeParamId ?? null;
+    return loadEventAndParticipants(
+      this.eventId,
+      this.eventService,
+      this.event,
+      this.participants,
+      this.error,
+      this.errorMessages
+    );
+  }
+
+  private setupFormListeners(): void {
     this.participantForm.get('type')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe((type) => {
         updateParticipantValidators(this.participantForm, type);
-        this.updateAdditionalInfoValidator(type);
+        updateAdditionalInfoValidator(this.participantForm, type);
       });
 
     // Clear general error on form changes
@@ -124,102 +115,33 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
           }
         });
     });
+  }
 
-    updateParticipantValidators(this.participantForm, 'PERSON');
-
-    this.filteredFirstNameOptions = this.participantForm.get('firstName')!.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(value => {
-        if (typeof value === 'string' && value) {
-          return this.participantService.searchParticipants(value, 'PERSON', 'firstName').pipe(
-            map(participants => participants.filter(p => !this.participants().some(existing => existing.id === p.id)))
-          );
-        }
-        return of([]);
-      })
+  private setupAutocompleteFields(): void {
+    console.log('Participants in setupAutocompleteFields:', this.participants());
+    this.filteredFirstNameOptions = setupFirstNameAutocomplete(
+      this.participantForm,
+      this.participantService,
+      this.participants()
     );
 
-    this.filteredLastNameOptions = this.participantForm.get('lastName')!.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(value => {
-        if (typeof value === 'string' && value) {
-          return this.participantService.searchParticipants(value, 'PERSON', 'lastName').pipe(
-            map(participants => participants.filter(p => !this.participants().some(existing => existing.id === p.id)))
-          );
-        }
-        return of([]);
-      })
+    this.filteredLastNameOptions = setupLastNameAutocomplete(
+      this.participantForm,
+      this.participantService,
+      this.participants()
     );
 
-    this.filteredCompanyNameOptions = this.participantForm.get('companyName')!.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(value => {
-        if (typeof value === 'string' && value) {
-          return this.participantService.searchParticipants(value, 'COMPANY', 'companyName').pipe(
-            tap(participants => console.log('Raw CompanyName participants:', participants)),
-            map(participants => participants.filter(p => p.companyName && p.companyName.trim() !== '' && !this.participants().some(existing => existing.id === p.id))),
-            tap(filtered => console.log('Filtered CompanyName participants:', filtered))
-          );
-        }
-        return of([]);
-      })
+    this.filteredCompanyNameOptions = setupCompanyNameAutocomplete(
+      this.participantForm,
+      this.participantService,
+      this.participants()
     );
   }
 
-  private updateAdditionalInfoValidator(type: string): void {
-    const additionalInfoControl = this.participantForm.get('additionalInfo');
-    if (type === 'PERSON') {
-      additionalInfoControl?.setValidators([Validators.maxLength(this.PERSON_ADDITIONAL_INFO_MAX_LENGTH)]);
-    } else if (type === 'COMPANY') {
-      additionalInfoControl?.setValidators([Validators.maxLength(this.COMPANY_ADDITIONAL_INFO_MAX_LENGTH)]);
-    }
-    additionalInfoControl?.updateValueAndValidity();
-  }
-
-  displayFn(participant: Participant | string): string {
-    if (!participant) {
-      return '';
-    }
-    if (typeof participant === 'string') {
-      return participant;
-    }
-    if (participant.type === 'COMPANY') {
-      return participant.companyName || '';
-    }
-    return `${participant.firstName} ${participant.lastName}`;
-  }
+  displayFn = displayParticipantFn;
 
   selectParticipant(participant: Participant): void {
-    let participantType: 'PERSON' | 'COMPANY' | null = null;
-    if (participant.firstName || participant.lastName) {
-      participantType = 'PERSON';
-    } else if (participant.companyName) {
-      participantType = 'COMPANY';
-    }
-
-    this.participantForm.patchValue({
-      firstName: participant.firstName,
-      lastName: participant.lastName,
-      personalCode: participant.personalCode,
-      companyName: participant.companyName,
-      registrationCode: participant.registrationCode,
-      participantCount: participant.participantCount,
-      contactPerson: participant.contactPerson,
-      paymentMethod: participant.paymentMethod,
-      email: participant.email,
-      phone: participant.phone,
-      additionalInfo: participant.additionalInfo
-    });
-
-    updateParticipantValidators(this.participantForm, participantType);
-    this.updateAdditionalInfoValidator(participantType || 'PERSON');
-  }
-
-  navigateToParticipant(eventId: string, participantId: string): void {
-    this.router.navigate([`/events/${eventId}/participants/${participantId}`]);
+    patchParticipantFormValues(this.participantForm, participant);
   }
 
   addParticipant(): void {
@@ -229,24 +151,9 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const formValue = this.participantForm.value;
-    const participant: Participant = {
-      type: formValue.type,
-      firstName: formValue.type === 'PERSON' ? formValue.firstName : undefined,
-      lastName: formValue.type === 'PERSON' ? formValue.lastName : undefined,
-      personalCode: formValue.type === 'PERSON' ? formValue.personalCode : undefined,
-      companyName: formValue.type === 'COMPANY' ? formValue.companyName : undefined,
-      registrationCode: formValue.type === 'COMPANY' ? formValue.registrationCode : undefined,
-      participantCount: formValue.participantCount || undefined,
-      contactPerson: formValue.contactPerson || undefined,
-      paymentMethod: formValue.paymentMethod,
-      email: formValue.email || undefined,
-      phone: formValue.phone || undefined,
-      additionalInfo: formValue.additionalInfo || undefined
-    };
+    const participant = mapFormToParticipant(this.participantForm.value);
 
-    const eventId = this.route.snapshot.paramMap.get('id');
-    if (!eventId) {
+    if (!this.eventId) {
       console.error('Event ID is missing');
       this.error.set(this.errorMessages.participant_add_failed);
       return;
@@ -257,7 +164,7 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
         if (!newParticipant.id) {
           return throwError(() => new Error('New participant ID is missing'));
         }
-        return this.eventService.addParticipantToEvent(+eventId, {
+        return this.eventService.addParticipantToEvent(+this.eventId!, {
           id: newParticipant.id,
           type: newParticipant.type
         }).pipe(
@@ -266,30 +173,19 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (newParticipant) => {
-        console.log('Participant added successfully:', newParticipant);
         this.participants.update((parts) => [...parts, newParticipant]);
-        this.resetForm();
+        resetParticipantForm(this.participantForm);
+        this.error.set(null);
         this.router.navigate(['/events']);
       },
       error: (err) => {
-        console.error('Error in participant creation or event assignment:', {
-          message: err.message,
-          status: err.status,
-          error: err.error,
-          stack: err.stack
-        });
-        this.handleServerError(err, formValue);
+        console.error('Error in participant creation or event assignment:', err);
+        this.handleServerError(err, this.participantForm.value);
       }
     });
   }
 
   private handleServerError(err: any, formValue: any): void {
-    console.log('Handling server error:', {
-      status: err.status,
-      error: err.error,
-      message: err.message
-    });
-
     if (err.status === 409) {
       const searchField = formValue.type === 'PERSON' ? 'personalCode' : 'registrationCode';
       const searchValue = formValue.type === 'PERSON' ? formValue.personalCode : formValue.registrationCode;
@@ -302,7 +198,6 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
 
       this.participantService.searchParticipants(searchValue, formValue.type, searchField).subscribe({
         next: (existingParticipants) => {
-          console.log('Search results for existing participant:', existingParticipants);
           const existingParticipant = existingParticipants.find(p =>
             (formValue.type === 'PERSON' && p.personalCode === formValue.personalCode) ||
             (formValue.type === 'COMPANY' && p.registrationCode === formValue.registrationCode)
@@ -319,16 +214,13 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
             type: existingParticipant.type
           }).subscribe({
             next: () => {
-              console.log('Existing participant added to event:', existingParticipant);
               this.participants.update((parts) => [...parts, existingParticipant]);
-              this.resetForm();
+              resetParticipantForm(this.participantForm);
+              this.error.set(null);
               this.router.navigate(['/events']);
             },
             error: (eventErr) => {
-              console.error('Failed to add existing participant to event:', {
-                status: eventErr.status,
-                error: eventErr.error
-              });
+              console.error('Failed to add existing participant to event:', eventErr);
               if (eventErr.status === 409) {
                 this.error.set(this.errorMessages.participant_already_added);
                 if (formValue.type === 'PERSON') {
@@ -366,9 +258,8 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
   }
 
   deleteParticipant(participantId: number): void {
-    const eventId = this.route.snapshot.paramMap.get('id');
-    if (eventId) {
-      this.eventService.removeParticipantFromEvent(+eventId, participantId).subscribe({
+    if (this.eventId) {
+      this.eventService.removeParticipantFromEvent(+this.eventId, participantId).subscribe({
         next: () => {
           this.participants.update((parts) => parts.filter((p) => p.id !== participantId));
           this.error.set(null);
@@ -392,26 +283,6 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
     }
   }
 
-  private resetForm(): void {
-    this.participantForm.reset({
-      type: 'PERSON',
-      firstName: '',
-      lastName: '',
-      personalCode: '',
-      companyName: '',
-      registrationCode: '',
-      participantCount: null,
-      contactPerson: '',
-      paymentMethod: null,
-      email: '',
-      phone: '',
-      additionalInfo: ''
-    });
-    updateParticipantValidators(this.participantForm, 'PERSON');
-    this.updateAdditionalInfoValidator('PERSON');
-    this.error.set(null);
-  }
-
   trackById(index: number, participant: Participant): number {
     return participant.id ?? index;
   }
@@ -420,18 +291,4 @@ export class ParticipantCreateComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
-}
-
-interface ErrorMessages {
-  event_load_failed: string;
-  participants_load_failed: string;
-  participant_add_failed: string;
-  participant_delete_failed: string;
-  invalid_form: string;
-  participant_already_added: string;
-  additional_info_too_long: string;
-  duplicate_personal_code: string;
-  duplicate_registration_code: string;
-  invalid_personal_code: string;
-  invalid_registration_code: string;
 }
