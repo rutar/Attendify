@@ -25,8 +25,8 @@ export async function seedDatabase() {
 
     // Insert individual participants (type: PERSON)
     const participantsRes = await pool.query(`
-      INSERT INTO participants (participant_type)
-      VALUES ('PERSON'), ('PERSON'), ('PERSON')
+      INSERT INTO participants (participant_type, payment_method)
+      VALUES ('PERSON','CASH'), ('PERSON','CARD'), ('PERSON','CASH')
       RETURNING id;
     `);
     const [aliceId, bobId, carolId] = participantsRes.rows.map(r => r.id);
