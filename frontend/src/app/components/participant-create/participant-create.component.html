@@ -1,9 +1,9 @@
 <div class="participant-create-wrapper">
   <div class="card">
     <div class="card-header">Osavõtjate lisamine</div>
-    <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
-    <form [formGroup]="participantForm" (ngSubmit)="addParticipant()">
 
+    <form [formGroup]="participantForm" (ngSubmit)="addParticipant()">
+      <div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
       <div class="mb-2 offset-md-3">
         <div class="form-check form-check-inline radio-buttons">
           <input class="form-check-input" type="radio" formControlName="type" value="PERSON" id="personType" />
