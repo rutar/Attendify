@@ -1,0 +1,61 @@
+erDiagram
+    events ||--o{ event_participant : has
+    participants ||--o{ event_participant : participates
+    participants ||--o| persons : is
+    participants ||--o| companies : is
+
+    events {
+        bigint id PK "auto-increment, starts at 99"
+        varchar(100) name "NOT NULL"
+        timestamptz date_time "NOT NULL"
+        varchar(200) location
+        varchar(20) status "NOT NULL, default: ACTIVE"
+        varchar(1500) additional_info
+        int total_participants "NOT NULL, default: 0"
+        timestamptz created_at "NOT NULL, default: CURRENT_TIMESTAMP"
+        timestamptz updated_at "NOT NULL, default: CURRENT_TIMESTAMP"
+    }
+
+    participants {
+        bigint id PK "auto-increment, starts at 99"
+        varchar(31) participant_type "NOT NULL, CHECK: PERSON or COMPANY"
+        varchar(20) payment_method
+        varchar(1500) additional_info
+        timestamptz created_at "NOT NULL, default: CURRENT_TIMESTAMP"
+        timestamptz updated_at "NOT NULL, default: CURRENT_TIMESTAMP"
+    }
+
+    persons {
+        bigint id PK,FK "references participants(id), ON DELETE CASCADE"
+        varchar(50) first_name "NOT NULL"
+        varchar(50) last_name "NOT NULL"
+        varchar(11) personal_code "NOT NULL, UNIQUE"
+        varchar(100) email
+        varchar(20) phone
+    }
+
+    companies {
+        bigint id PK,FK "references participants(id), ON DELETE CASCADE"
+        varchar(100) company_name "NOT NULL"
+        varchar(8) registration_code "NOT NULL, UNIQUE"
+        int participant_count "CHECK: > 0"
+        varchar(100) contact_person
+        varchar(100) email
+        varchar(20) phone
+    }
+
+    event_participant {
+        bigint event_id PK,FK "references events(id), ON DELETE CASCADE"
+        bigint participant_id PK,FK "references participants(id), ON DELETE CASCADE"
+        varchar(20) attendance_status "default: REGISTERED"
+        timestamptz registered_at "NOT NULL, default: CURRENT_TIMESTAMP"
+    }
+
+    %% Indexes
+    events ||--o{ idx_events_date_time : indexed
+    persons ||--o{ idx_persons_personal_code : indexed
+    companies ||--o{ idx_companies_registration_code : indexed
+
+    %% Triggers and Functions
+    event_participant ||--o{ update_event_participants : triggers
+    companies ||--o{ update_event_participants_on_company_change : triggers
