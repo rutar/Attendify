@@ -300,7 +300,7 @@ export function loadEventAndParticipants(
         }),
         catchError((err) => {
           console.error('Failed to load participants:', err);
-          error.set(errorMessages.participant_load_failed);
+          error.set(errorMessages.participants_load_failed); // Fixed key name here
           participants.set([]);
           return of([]);
         })

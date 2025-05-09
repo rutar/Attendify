@@ -9,6 +9,7 @@ import {of, throwError} from 'rxjs';
 import {EventData} from '../../models/event.model';
 import {Participant} from '../../models/participant.model';
 import {By} from '@angular/platform-browser';
+import {updateParticipantValidators} from '../../utils/form-utils';
 
 describe('EventDetailComponent', () => {
   let component: EventDetailComponent;
@@ -94,30 +95,34 @@ describe('EventDetailComponent', () => {
   }));
 
   it('should set error message when participants loading fails', fakeAsync(() => {
-    eventService.getEvent.and.returnValue(of(mockEvent));
-    eventService.getEventParticipants.and.returnValue(throwError(() => new Error('Failed')));
+    // Mock the services
+    eventService.getEvent.and.returnValue(of(mockEvent)); // Mocking event fetch
+    eventService.getEventParticipants.and.returnValue(throwError(() => new Error('Failed'))); // Simulating an error
 
+    // Trigger change detection
     fixture.detectChanges();
-    tick();
+    tick(); // Simulate passage of time for async operations
 
+    // Ensure the error message is correctly set
     expect(component.error()).toBe('Osalejate nimekirja laadimine ebaõnnestus');
   }));
 
 
   it('should require companyName when type is COMPANY', () => {
-    // 1. Set the type to COMPANY
-    component.participantForm.get('type')?.setValue('COMPANY');
+    const form = component.participantForm;
+    const typeControl = form.get('type');
+    const companyNameControl = form.get('companyName');
 
-    // 2. Manually trigger the validator update (since valueChanges might be async)
-    component.participantForm.get('type')?.updateValueAndValidity();
 
-    // 3. Get the companyName control
-    const companyNameControl = component.participantForm.get('companyName');
+    typeControl?.setValue('COMPANY');
 
-    // 4. Verify it's required
+
+    updateParticipantValidators(form, 'COMPANY');
+
+
     expect(companyNameControl?.hasValidator(Validators.required)).toBeTrue();
 
-    // 5. Additional check - verify the control is invalid when empty
+
     companyNameControl?.setValue('');
     expect(companyNameControl?.invalid).toBeTrue();
     expect(companyNameControl?.errors?.['required']).toBeTruthy();
