@@ -255,6 +255,38 @@ Defined via Liquibase changelogs:
 
 ## Deployment
 
+**Locally in IDE**
+
+git clone https://github.com/rutar/Attendify.git
+cd Attendify
+
+- **Backend tests**
+  cd /backend
+  ./gradlew test
+
+- **Frontend tests**
+  cd /frontend
+  ng test
+
+- **E2E Playwright tests**
+  cd /frontend/playwright
+  npx playwright test --ui 
+- 
+- Running locally  `application.yaml` and environment variables
+should be adjusted according used PostgreSQL setup 
+
+- **Run backend**
+    cd /backend
+    ./gradlew bootRun
+
+- **Run frontend**
+  cd /frontend
+  ng serve
+
+
+
+**Using Docker / Docker Desktop**
+
 - **Docker Compose** (version 3.8)
     - `db` (Postgres 15)
     - `backend` (Spring Boot)
@@ -264,6 +296,9 @@ Defined via Liquibase changelogs:
   ```bash
   docker-compose up --build
   ```  
+
+  Application available at **http://localhost**
+
 
 - **Configuration** via `application.yaml` and environment variables
 
