@@ -271,7 +271,7 @@ cd Attendify
 - **E2E Playwright tests**
   cd /frontend/playwright
   npx playwright test --ui 
-- 
+
 - Running locally  `application.yaml` and environment variables
 should be adjusted according used PostgreSQL setup 
 
