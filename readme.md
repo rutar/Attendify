@@ -34,7 +34,6 @@ Start the services defined in docker-compose.yml, ensuring to build images:
 docker-compose up --build
  ```
 
-<img src="img/s1.png" alt="My local image" width="900">
 Three container images will be built: **backend**, **frontend** and **db**.
 
 Successful run of Attendify application will be shown in logs:
