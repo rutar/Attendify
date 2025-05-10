@@ -206,17 +206,15 @@ Defined via Liquibase changelogs:
 
 ---
 
-## Security Model
+## Security Model (IN PROGRESS)
 
-- **Authentication**: JWT via Spring Security
-- **Authorization**: Roles
-    - `ADMIN` — full access
-    - `ORGANIZER` — manage events & participants
-    - `VIEWER` — read-only
+- **Authentication**: JWT via Spring Security (NOT IMPLEMENTED)
+- **Authorization**: Roles  (NOT IMPLEMENTED)
+    - `ADMIN` — full access (NOT IMPLEMENTED)
+    - `ORGANIZER` — manage events & participants (NOT IMPLEMENTED)
+    - `VIEWER` — read-only (NOT IMPLEMENTED)
 
 - **CORS**: configured to allow frontend origin
-
----
 
 ## REST API Endpoints
 
@@ -270,12 +268,6 @@ Defined via Liquibase changelogs:
 - **Configuration** via `application.yaml` and environment variables
 
 ---
-
-## Logging
-
-- **Backend**: SLF4J + Logback
-    - Log levels configurable per environment
-    - Audit logs for CRUD operations
 
 - **Frontend**: Console logging for errors and HTTP failures
 
