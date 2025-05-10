@@ -6,6 +6,87 @@
 
 ---
 
+# Quick guide
+
+1. [Clone the repository](#clone-the-repository)
+2. [Start Attendify application using docker compose](#start-attendify-application-using-docker-compose)
+3. [Start using Attendify application](#start-using-attendify-application)
+
+<a id="clone-the-repository"></a>
+### 1. Clone the repository
+
+
+Run the following command:
+
+ ```bash
+git clone https://github.com/rutar/Attendify.git
+cd Attendify
+ ```
+<a id="start-attendify-application-using-docker-compose"></a>
+### 2. Start Attendify application using docker compose
+
+Ensure Docker and Docker-compose are installed:
+
+ ```bash
+docker --version
+docker-compose --version
+ ```
+
+Ensure gradle wrapper is available:
+ ```bash
+gradlew wrapper
+ ```
+
+Start the services defined in docker-compose.yml, ensuring to build images:
+ ```bash
+docker-compose up --build
+ ```
+
+<img src="img/s1.png" alt="My local image" width="900">
+Three container images will be built: **backend**, **frontend** and **db**.
+
+Successful run of Attendify application will be shown in logs:
+
+<img src="img/s2.png" alt="My local image" width="900">
+
+<a id="start-using-attendify-application"></a>
+### 3. Start using Attendify application
+
+ ```bash
+http://localhost
+ ```
+
+Initial event list screen:
+
+<img src="img/s3.png" alt="My local image" width="900">
+
+At the left part there are upcoming events, at the right part there are 
+completed events from past.
+
+Click on future event name routes to event detail page that shows participants of selected event:
+
+<img src="img/s4.png" alt="My local image" width="900">
+
+Click on cross at the right of participant name removes corresponding participant from event:
+
+<img src="img/s6.png" alt="My local image" width="900">
+
+Click on participant name routes to participant details page:
+
+<img src="img/s5.png" alt="My local image" width="900">
+
+
+Click on 'add participant' button opens 'add participant' view:
+
+<img src="img/s7.png" alt="My local image" width="900">
+<img src="img/s8.png" alt="My local image" width="900">
+
+After starting typing of firstname or lastname - existing participants registered 
+in Attendify system will be suggested:
+
+<img src="img/s9.png" alt="My local image" width="900">
+
+
 ## Table of Contents
 
 1. [Overview](#overview)
@@ -15,14 +96,11 @@
 5. [Domain Model](#domain-model)
 6. [Database Schema](#database-schema)
 7. [Triggers & Business Rules](#triggers--business-rules)
-8. [Security Model](#security-model)
+8. [Security Model](#security-model)(NOT IMPLEMENTED)
 9. [REST API Endpoints](#rest-api-endpoints)
 10. [Frontend (Angular 19)](#frontend-angular-19)
 11. [Testing Strategy](#testing-strategy)
 12. [Deployment](#deployment)
-13. [Logging](#logging)
-14. [Roadmap](#roadmap)
-
 ---
 
 ## Overview
@@ -206,7 +284,7 @@ Defined via Liquibase changelogs:
 
 ---
 
-## Security Model (IN PROGRESS)
+## Security Model (NOT IMPLEMENTED)
 
 - **Authentication**: JWT via Spring Security (NOT IMPLEMENTED)
 - **Authorization**: Roles  (NOT IMPLEMENTED)
@@ -294,6 +372,8 @@ should be adjusted according used PostgreSQL setup
 
 - **Build & Run**:
   ```bash
+  
+  
   docker-compose up --build
   ```  
 
