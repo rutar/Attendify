@@ -55,6 +55,10 @@ Initial event list screen:
 At the left part there are upcoming events, at the right part there are 
 completed events from past.
 
+Click on 'LISA ÜRITUS' or 'ÜRITUSE LISAMINE' routes to event detail page that shows participants of selected event:
+
+<img src="img/s10.png" alt="My local image" width="900">
+
 Click on future event name routes to event detail page that shows participants of selected event:
 
 <img src="img/s4.png" alt="My local image" width="900">
